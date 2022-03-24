@@ -1,0 +1,30 @@
+<h1 mat-dialog-title>My Games</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="outline" style="width: 100%;">
+    <mat-label>{{ openPrompt }}</mat-label>
+    <mat-select (selectionChange)="onChange($event)" [disabled]="gameNamesList.length == 0">
+      <mat-option *ngFor="let gameName of gameNamesList" [value]="gameName">
+        {{gameName}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-divider></mat-divider>
+  <p class="pt-2">Create New</p>
+  <mat-form-field appearance="outline" style="width: 100%;">
+    <mat-label>Game Name</mat-label>
+    <input matInput [(ngModel)]="newGameName" name="name" #name="ngModel" required maxlength="30" pattern="^(?!\d)[a-zA-Z\d]+(?: [a-zA-Z\d]+)*$">
+
+    <mat-error *ngIf="name.errors && name.errors['required']">
+      Name is required.
+    </mat-error>
+    <mat-error *ngIf="name.errors && name.errors['maxlength']">
+      Name must less than 4 characters long.
+    </mat-error>
+    <mat-error *ngIf="name.errors && name.errors['pattern']">
+      Must be Letters Numbers only, with one space between words
+    </mat-error>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button disabled="{{name.invalid && (name.dirty || name.touched)}}" mat-button [mat-dialog-close]="newGameName" cdkFocusInitial>Create</button>
+</div>

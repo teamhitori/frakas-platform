@@ -1,0 +1,26 @@
+﻿@model GameInstanceSource
+
+@{
+
+    ViewData["Title"] = $"Game { Model?.gameInstance?.gameName }";
+    Layout = "~/Views/Shared/_LayoutGame.cshtml";
+}
+
+@{
+    if (Model?.gameInstance != null)
+    {
+        <input type="hidden" id="config-feSourceRef" value="@Model.feRef" />
+        <input type="hidden" id="config-gameName" value="@Model.gameInstance.gameName" />
+        <input type="hidden" id="config-gamePrimaryName" value="@Model.gameInstance.gamePrimaryName" />
+        <input type="hidden" id="config-isFillScreen" value="@Model.gameConfig.fillScreen" />
+        <input type="hidden" id="config-screenRatio" value="@Model.gameConfig.screenRatio" />
+    }
+}
+
+
+
+<game-component></game-component>
+
+<script type="text/javascript" src="@Model?.feRef"></script>
+
+

@@ -1,0 +1,259 @@
+.container {
+  max-width: 1500px;
+}
+
+.game-panel {
+  //padding: 5px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-width textarea {
+  width: 100%;
+  height: 100%;
+  background-color: #0000;
+  min-height: 350px;
+}
+
+.hud {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.container input,
+.container textarea {
+  caret-color: red !important;
+}
+
+.mat-accordion {
+  width: 100%;
+}
+
+mat-sidenav-container.mat-drawer-container {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  opacity: 1;
+
+  -webkit-transition: opacity 1s ease-in-out;
+  -moz-transition: opacity 1s ease-in-out;
+  -ms-transition: opacity 1s ease-in-out;
+  -o-transition: opacity 1s ease-in-out;
+  transition: opacity 1s ease-in-out;
+}
+
+mat-sidenav-container.mat-drawer-container,
+mat-sidenav.mat-sidenav {
+  top: 0px;
+  padding-top: 64px;
+}
+
+mat-sidenav-container.mat-drawer-container.collapse-title {
+  padding-top: 0px;
+  opacity: 1;
+}
+
+#monaco-container {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+.logic-buttons {
+  overflow-x: auto;
+  background-color: #2b2b2b;
+  border: 1px solid grey;
+}
+
+.myContentClass {
+  background: red;
+}
+
+.logic-panel {
+  margin: 0px;
+  height: 100%;
+}
+
+.explorer-panel {
+  //min-width: 150px;
+  //background-color: #272727;
+  //background-color: theming.get-color-from-palette($accent, default-contrast);;
+}
+
+.save-panel {
+  margin: 0;
+  padding: 15px 8px;
+  background-color: #383838;
+}
+
+.save-button {
+  padding: 15px 15px 20px;
+
+  button {
+    height: 100%;
+  }
+}
+
+.error-card {
+  max-width: 400px;
+  position: absolute;
+  z-index: 2;
+  right: 70px;
+  bottom: 15px;
+}
+
+.editor-title {
+  display: flex;
+  justify-content: space-between;
+  padding: 0px;
+  margin: 0 12px;
+
+  opacity: 1;
+
+  -webkit-transition: opacity 0.1s ease-in-out;
+  -moz-transition: opacity 0.1s ease-in-out;
+  -ms-transition: opacity 0.1s ease-in-out;
+  -o-transition: opacity 0.1s ease-in-out;
+  transition: opacity 0.1s ease-in-out;
+}
+
+.interval {
+  padding: 10px 0 0 25px;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner:before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  border-top-color: #00000000;
+  animation: spinner 0.8s linear infinite;
+}
+
+.logicDirty {
+  background-color: #3f2323;
+}
+
+.container-debug {
+  padding: 0px;
+}
+
+.container-debug-inner {
+  height: 100%;
+}
+
+.container-debug-inner.collapse-content {
+  height: 100%;
+  padding: 65px 0 0 0;
+  margin: -65px 0 0 0;
+}
+
+.active-game-panel {
+  position: absolute;
+  z-index: 1;
+  padding: 50px;
+  margin-left: 0px;
+  left: 0;
+  margin-bottom: 100px;
+
+  button {
+    display: block;
+    margin-bottom: 5px;
+  }
+}
+
+.canvas-holder {
+  position: relative;
+  height: 100%;
+  padding: 10px;
+}
+
+.canvas-holder-card {
+  top: 0px;
+  height: 100%;
+  border-radius: 0%;
+  display: inline-block;
+  display: block;
+}
+
+.editor-toolbar.collapse-title {
+  height: 0px;
+  opacity: 0;
+
+  -webkit-transition: opacity 1s ease-in-out;
+  -moz-transition: opacity 1s ease-in-out;
+  -ms-transition: opacity 1s ease-in-out;
+  -o-transition: opacity 1s ease-in-out;
+  transition: opacity 1s ease-in-out;
+}
+
+.button-right {
+  position: absolute;
+  right: 0px;
+  margin: 0 28px 0 0px;
+}
+
+#main-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0px;
+}
+
+#main-container > .container-fluid {
+  flex-grow: 1;
+}
+
+.game-log {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+}
+
+#xterm-container {
+  flex-grow: 1;
+}
+
+.log-button {
+  right: 100px;
+}
+
+.game-window-frame {
+  height: 100%;
+  width: 100%;
+}
+
+.delete-file-button {
+  display: block;
+  position: absolute;
+  right: 0px;
+  top: 0;
+  width: 50px;
+}
+
+

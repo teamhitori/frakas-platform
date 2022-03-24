@@ -1,0 +1,11 @@
+<h1 mat-dialog-title>New File</h1>
+<div mat-dialog-content>
+  <p class="pt-2">File Name</p>
+  <mat-form-field appearance="outline" style="width: 100%;">
+    <mat-label>File Name (.ts)</mat-label>
+    <input matInput [(ngModel)]="fileName">
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="fileName" cdkFocusInitial>Create</button>
+</div>

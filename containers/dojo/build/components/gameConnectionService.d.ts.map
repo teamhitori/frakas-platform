@@ -1,0 +1,1 @@
+{"version":3,"file":"gameConnectionService.d.ts","sourceRoot":"","sources":["../../components/gameConnectionService.ts"],"names":[],"mappings":"AAWA,qBAAa,qBAAqB;IAE9B,OAAO,CAAC,YAAY,CAAO;IAC3B,OAAO,CAAC,WAAW,CAAQ;IAE3B,OAAO,CAAC,WAAW,CAAyC;IAE5D,OAAO,CAAC,YAAY,CAAqC;IACzD,OAAO,CAAC,eAAe,CAAkC;;IAczD,OAAO,CAAC,YAAY;IAoCpB,OAAO,CAAC,cAAc;YAqBR,WAAW;IAwBzB,OAAO,CAAC,YAAY;CAmBvB"}

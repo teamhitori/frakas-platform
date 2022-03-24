@@ -1,0 +1,1 @@
+{"version":3,"file":"AzStorage.d.ts","sourceRoot":"","sources":["../../components/AzStorage.ts"],"names":[],"mappings":";AAGA,qBAAa,SAAS;IAElB,OAAO,CAAC,kBAAkB,CAAoB;;IAuBjC,gBAAgB,CAAC,aAAa,EAAE,MAAM,EAAE,YAAY,EAAE,MAAM;IAoCzE,YAAY,CAAC,QAAQ,EAAE,MAAM,EAAE,cAAc,EAAE,MAAM,CAAC,cAAc;CAIvE"}

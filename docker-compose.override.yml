@@ -1,0 +1,42 @@
+version: '3.4'
+
+services:
+  web:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+    ports:
+      - "8000:80"
+      - "8001:443"
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - "./editor/dist:/app/wwwroot"
+    dns:
+      - 8.8.8.8
+
+  build:
+    environment:
+      - USER_SECRETS_ID=a0b120ef-ee80-4c73-833a-b57d0b135bb4
+    build:
+      dockerfile: Dockerfile_Debug
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets/a0b120ef-ee80-4c73-833a-b57d0b135bb4:/root/.microsoft/usersecrets
+      - "./containers/build:/src/"
+    ports:
+      - "1000:1000"
+    dns:
+      - 8.8.8.8
+
+  dojo:
+    environment: 
+      - environment=local
+      - USER_SECRETS_ID=a0b120ef-ee80-4c73-833a-b57d0b135bb4
+    build:
+      dockerfile: Dockerfile_Debug
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets/a0b120ef-ee80-4c73-833a-b57d0b135bb4:/root/.microsoft/usersecrets
+      - "./containers/dojo:/src/"
+    ports:
+      - "8002:8080"
+    dns:
+      - 8.8.8.8

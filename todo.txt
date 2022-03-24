@@ -1,0 +1,1 @@
+add game name validation as per frakas-platform\editor\src\app\components\dialog-new-game\dialog-new-game.component.html

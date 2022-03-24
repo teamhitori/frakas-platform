@@ -1,0 +1,66 @@
+<div class="container-fluid">
+  <div class="row justify-content-center p-2" *ngIf="gameDefinition.isPublished">
+    <mat-toolbar color="primary">
+      <span class="mx-auto">{{ gameDefinition.gameName }} is Live</span>
+    </mat-toolbar>
+  </div>
+  <div class="row p-2" *ngIf="gameDefinition.isPublished == false">
+    <div class="col-1">
+      <button mat-raised-button aria-label="Publish" color="primary" (click)="publish()">
+        <mat-icon>flash_on</mat-icon> Publish
+      </button>
+    </div>
+  </div>
+  <div class="row p-2" *ngIf="gameDefinition.isPublished">
+    <div class="col-6 mt-2 text-right">
+      Game URL:
+    </div>
+    <div class="col-6">
+      <button mat-raised-button color="primary" (click)="openGame()">
+        {{environmentApiBase}}{{publishedDefinition?.publishedPath}}
+        <mat-icon>open_in_new</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div class="row p-2" *ngIf="gameDefinition.isPublished">
+    <div class="col-6 mt-2 text-right">
+      {{publishedDefinition?.isStarted && 'Stop / Restart Game' || 'Start Game'}}
+    </div>
+    <div class="col-6">
+      <button mat-raised-button aria-label="Start" *ngIf="!publishedDefinition?.isStarted" (click)="start()">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+      <button mat-raised-button aria-label="Stop" *ngIf="publishedDefinition?.isStarted" (click)="stop()">
+        <mat-icon>stop</mat-icon>
+      </button>
+      <button mat-raised-button aria-label="Restart" *ngIf="publishedDefinition?.isStarted" (click)="restart()">
+        <mat-icon>replay</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div class="row p-2" *ngIf="gameDefinition.isPublished">
+    <div class="col-6 mt-2 text-right">
+      Active Players:
+    </div>
+    <div class="col-6 mt-2">
+      {{ publishedDefinition?.activePlayerCount || 0 }}
+    </div>
+  </div>
+  <div class="row p-2" *ngIf="gameDefinition.isPublished">
+    <div class="col-6 mt-2 text-right">
+      {{gameDefinition?.debugEnabled && 'Disable Game logs' || 'Enable Game logs'}}
+    </div>
+    <div class="col-6">
+      <button mat-raised-button aria-label="Start" *ngIf="!gameDefinition?.debugEnabled" (click)="enableLogs()">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+      <button mat-raised-button aria-label="Stop" *ngIf="gameDefinition?.debugEnabled" (click)="disableLogs()">
+        <mat-icon>stop</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div id="xterm-container2" class="row p-2 game-log"
+    [ngStyle]="{'visibility': gameDefinition?.debugEnabled && 'visible' || 'hidden'}">
+
+  </div>
+</div>

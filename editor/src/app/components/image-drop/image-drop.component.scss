@@ -1,0 +1,21 @@
+
+.drag-over {
+  border: 2px dashed white;
+  background-color: #ffffff55;
+}
+
+.canvas-holder {
+  position: relative;
+  height: 100%;
+  padding: 10px;
+}
+
+.canvas-holder-card {
+  top: 0px;
+  height: 100%;
+  border-radius: 0%;
+  display: inline-block;
+  display: block;
+
+  pointer-events: none;
+}

@@ -1,0 +1,247 @@
+<mat-sidenav-container [class.collapse-title]="fullscreen" class="sidenav-container" (keydown)="onKeyDown($event)">
+  <mat-sidenav #sidenav class="sidenav" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="(isHandset$ | async) === false">
+    <mat-toolbar></mat-toolbar>
+    <mat-nav-list>
+      <div class="container-fluid">
+        <div class="row p-2">
+          <button mat-raised-button aria-label="Debug" color="{{screen == EditorScreen.debug ? 'primary' : ''}}"
+            (click)="showDebugWindow()">
+            <mat-icon>bug_report</mat-icon> Debug
+          </button>
+        </div>
+
+        <div class="row p-2">
+          <button mat-raised-button aria-label="Editor" color="{{screen == EditorScreen.editor ? 'primary' : ''}}"
+            (click)="showEditorWindow()">
+            <mat-icon>code</mat-icon> Code
+          </button>
+        </div>
+
+        <div class="row p-2">
+          <button mat-raised-button aria-label="Assets" color="{{screen == EditorScreen.assets ? 'primary' : ''}}"
+            (click)="showAssetsWindow()">
+            <mat-icon>perm_media</mat-icon> Assets
+          </button>
+        </div>
+
+        <div class="row p-2">
+          <button mat-raised-button aria-label="Settings" color="{{screen == EditorScreen.settings ? 'primary' : ''}}"
+            (click)="showSettingsWindow()">
+            <mat-icon>settings</mat-icon> Settings
+          </button>
+        </div>
+
+        <div class="row p-2">
+          <button mat-raised-button aria-label="Publish" color="{{screen == EditorScreen.publish ? 'primary' : ''}}"
+            (click)="showPublishWindow()">
+            <mat-icon>bolt</mat-icon> Publish
+          </button>
+        </div>
+      </div>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content id="main-container">
+    <mat-toolbar class="editor-toolbar" [class.collapse-title]="fullscreen">
+      <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="sidenav.toggle()"
+        *ngIf="isHandset$ | async">
+        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      </button>
+      <div [class.collapse-title]="fullscreen" class="container-fluid editor-title">
+        <button mat-raised-button aria-label="Debug" (click)="showDialogNewGame()">
+          <mat-icon>folder</mat-icon> My Games
+        </button>
+        <div>
+          {{ currentGameDefinition.gameName }}
+        </div>
+        <div class="row">
+          <div class="col-6 mr-2">
+            <button mat-raised-button aria-label="Debug" color="{{showLog && 'primary' || 'secondary'}}" (click)="showLog = !showLog">
+              <mat-icon>article</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-toolbar>
+    <div #debugCantainer class="container-fluid d-flex flex-column overflow-hidden container-debug"
+      *ngIf="screen == EditorScreen.debug">
+      <div class="container-debug-inner" [class.collapse-content]="fullscreen">
+        <div #canvasHolder class="canvas-holder">
+          <mat-card class="canvas-holder-card">
+            <iframe class="game-window-frame" [src]="safeSrc" *ngIf="isGameActive" frameborder="0"
+              title="Game Window for {{ currentGameDefinition.gameName }}" webkitallowfullscreen mozallowfullscreen
+              allowfullscreen></iframe>
+
+            <!-- <iframe *ngIf="isGameActive" [src]="sanitizer.bypassSecurityTrustResourceUrl(currentGameName)" title="Game Window for {{ currentGameName }}"></iframe> -->
+
+            <!-- <app-game-window #gameWindow class="game-panel-debug" (gameWindow)="registerGameWindow($event)"
+              [gameConfig]="gameDefinition.gameConfig">
+            </app-game-window> -->
+
+          </mat-card>
+        </div>
+      </div>
+      <div>
+        <mat-toolbar>
+          <button mat-icon-button aria-label="Start" (click)="startGame()">
+            <mat-icon>play_arrow</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Step" (click)="stepGame()">
+            <mat-icon>skip_next</mat-icon>
+          </button>
+          <button mat-icon-button aria-label="Stop" (click)="stopGame()">
+            <mat-icon>stop</mat-icon>
+          </button>
+
+          <button mat-raised-button aria-label="Debug" (click)="refreshActive()">
+            <mat-icon>login</mat-icon>
+          </button>
+          <div [class.invisible]="!showActive" class="active-game-panel" [class.spinner]="loadingActive"
+            (mouseleave)="showActive=false">
+            <p *ngIf="activeGameList.length == 0 && !loadingActive">No active games</p>
+            <button mat-raised-button *ngFor="let activeGame of activeGameList" style="margin-left: 30px;"
+              (click)="onSelectActiveGame(activeGame)">
+              [{{activeGame.gamePrimaryName}}] {{activeGame.createTime}}
+            </button>
+          </div>
+
+          <button class="button-right" mat-raised-button color="warn" aria-label="Expand" *ngIf="!fullscreen"
+            (click)="expand()">
+            <mat-icon>open_in_full</mat-icon>
+          </button>
+          <button class="button-right" mat-raised-button color="warn" aria-label="Collapse" *ngIf="fullscreen"
+            (click)="collapse()">
+            <mat-icon>close_fullscreen</mat-icon>
+          </button>
+
+        </mat-toolbar>
+      </div>
+    </div>
+    <div class="container-fluid d-flex flex-column overflow-hidden p-0" *ngIf="screen == EditorScreen.editor">
+      <!-- <mat-form-field class="interval">
+        <mat-label>Interval (ms)</mat-label>
+        <input matInput placeholder="100" [(ngModel)]="this.gameDefinition.gameConfig.intervalMs">
+      </mat-form-field> -->
+      <!-- <div class="row logic-panel">
+        <div class="col-10 p-0">
+          <div class="m-1 p-2 logic-buttons">
+            <mat-button-toggle-group [disabled]="saving" name="Logic" aria-label="Logic">
+              <mat-button-toggle [class.logicDirty]="savingLogicScreen == LogicType.FrontendLogic && fileIsDirty"
+                [checked]="currentLogicScreen == LogicType.FrontendLogic" value="frontEnd"
+                (click)="showFrontEndLogic()">
+                Front End
+              </mat-button-toggle>
+              <mat-button-toggle [class.logicDirty]="savingLogicScreen == LogicType.BackendLogic && fileIsDirty"
+                [checked]="currentLogicScreen == LogicType.BackendLogic" (click)="showBackendLogic()">
+                Back End
+              </mat-button-toggle>
+
+            </mat-button-toggle-group>
+          </div>
+        </div>
+        <div class="col-2 save-button">
+          <button mat-raised-button aria-label="Save button" [class.spinner]="saving" [disabled]="saving"
+            (click)="saveLogic()">
+            <mat-icon>save</mat-icon>
+          </button>
+        </div>
+      </div> -->
+      <div class="row logic-panel">
+        <div class="col-xs-4 col-sm-2 col-2 p-0 m-0 explorer-panel">
+          <div class="row save-panel">
+            <button mat-raised-button aria-label="Save button" [class.spinner]="saving" [disabled]="saving || noChanges"
+              (click)="saveCode()">
+              <mat-icon>save</mat-icon> Save
+            </button>
+          </div>
+          <div class="row m-0 p-1">
+            <button mat-raised-button aria-label="New File" color="primary" (click)="showDialogNewFile()">
+              <mat-icon>add</mat-icon> New File
+            </button>
+          </div>
+          <div class="row m-0 p-1 position-relative" *ngFor="let codeFile of codeFiles">
+            <button mat-raised-button aria-label="New File" class="{{getFileColor(codeFile)}}"
+              (click)="selectFile(codeFile)">
+              {{ codeFile.fileName }}
+            </button>
+
+            <button class="delete-file-button" mat-icon-button color="accent" (click)="deletetFile(codeFile)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+        <div class="col-xs-8 col-sm-10 col-10  p-0 position-relative">
+          <mat-card ng class="error-card" *ngIf="codeValidation?.success == false">
+            <mat-card-header>
+              <div mat-card-avatar>
+                <mat-icon>info</mat-icon>
+              </div>
+              <mat-card-title>Validation Failed</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>
+                {{ codeValidation?.error?.message }}
+              </p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button (click)="codeValidation=undefined">Close</button>
+            </mat-card-actions>
+          </mat-card>
+
+          <!-- <iframe  [src]="safeSrcEditor" style="height: 100%; width:100%" frameborder="0" title="Game Window for {{ currentGameDefinition.gameName }}" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe> -->
+
+          <!-- <div id="monaco-editor-cont">
+[options]="editorOptions"
+            (onInit)="onInit($event)"
+          </div> -->
+          <app-monaco-editor #fileEditorWindow style="height: 100%" (onFileChange)="onFileChange()"
+            [ngStyle]="{'visibility': currentFile && 'visible' || 'hidden'}">
+          </app-monaco-editor>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid overflow-hidden p-0" *ngIf="screen == EditorScreen.assets">
+      <app-image-drop #imageDrop [gameAssets]="gameAssets" (notifyAddImgs)="onAddImgs($event)"></app-image-drop>
+    </div>
+    <div class="container-fluid d-flex flex-column overflow-hidden p-0" *ngIf="screen == EditorScreen.settings">
+      <div class="example-container">
+        <form>
+          <div class="container pt-3">
+            <div class="row">
+              <div class="col-12">
+                <h4>Screen Settings:</h4>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <mat-checkbox [checked]="currentGameDefinition?.gameConfig?.fillScreen || false"
+                  (change)="fillScreenChange($event)">Fill Screen</mat-checkbox>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <mat-form-field class="example-full-width" appearance="standard">
+                  <mat-label>Screen Aspect Ratio</mat-label>
+                  <input matInput placeholder="1.778"
+                    [disabled]="(currentGameDefinition?.gameConfig?.fillScreen || false)" name="screenRatio"
+                    [value]="currentGameDefinition?.gameConfig?.screenRatio" (input)="screenRatioChange($event)">
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="container-fluid d-flex p-0" *ngIf="screen == EditorScreen.publish">
+      <app-publish-panel #publishPanel [gameDefinition]="currentGameDefinition" class="w-100">
+
+      </app-publish-panel>
+    </div>
+    <div class="game-log" [ngStyle]="{'visibility': showLog && 'visible' || 'hidden'}">
+      <mat-toolbar color="primary"> <button mat-icon-button (click)="showLog=false">
+          <mat-icon>close</mat-icon>
+        </button></mat-toolbar>
+      <div id="xterm-container"></div>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

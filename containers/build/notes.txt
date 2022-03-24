@@ -1,0 +1,6 @@
+Role: Compile and serve Game Source Code
+Private endpoints only
+Requests:
+- Start TS Watch for user context
+- Put Source Files (Compile)
+- Poll compiled code

@@ -1,0 +1,246 @@
+
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use '~@angular/material' as mat;
+// Plus imports for other components in your app.
+@use './app/components/editor/editor.component-theme' as editor;
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat.core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+$mulplay-editor-primary: mat.define-palette(mat.$indigo-palette);
+$mulplay-editor-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+
+// The warn palette is optional (defaults to red).
+$mulplay-editor-warn: mat.define-palette(mat.$red-palette);
+
+// Create the theme object. A theme consists of configurations for individual
+// theming systems such as "color" or "typography".
+$mulplay-theme: mat.define-dark-theme((
+  color: (
+    primary: $mulplay-editor-primary,
+    accent: $mulplay-editor-accent,
+    warn: $mulplay-editor-warn,
+  )
+));
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include mat.all-component-themes($mulplay-theme);
+@include editor.theme($mulplay-theme);
+
+/* You can add global styles to this file, and also import other style files */
+@import '~bootstrap/dist/css/bootstrap.min.css';
+
+
+
+
+html, body { height: 100%; }
+
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+nav {
+  z-index: 2;
+
+  -webkit-transition: opacity 1s ease-in-out;
+  -moz-transition: opacity 1s ease-in-out;
+  -ms-transition: opacity 1s ease-in-out;
+  -o-transition: opacity 1s ease-in-out;
+  transition: opacity 1s ease-in-out;
+}
+
+nav.collapse-header {
+  height: 0px;
+  padding: 0px;
+}
+
+.navbar-img {
+  width: 30px;
+  border-radius: 50%;
+}
+
+@media(min-width: 960px) {
+   nav > .container {
+    padding: 0 170px 0;
+  }
+}
+
+nav > .container {
+  max-width: none !important;
+
+  opacity: 1;
+
+  -webkit-transition: opacity 0.1s ease-in-out;
+  -moz-transition: opacity 0.1s ease-in-out;
+  -ms-transition: opacity 0.1s ease-in-out;
+  -o-transition: opacity 0.1s ease-in-out;
+  transition: opacity 0.1s ease-in-out;
+}
+
+nav.collapse-header > .container {
+  opacity: 0;
+}
+
+
+.collapse-header {
+  height: 0px;
+  padding: 0px;
+}
+
+
+
+.xterm {
+  position: relative;
+  user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+}
+
+.xterm.focus,
+.xterm:focus {
+  outline: none;
+}
+
+.xterm .xterm-helpers {
+  position: absolute;
+  top: 0;
+  /**
+   * The z-index of the helpers must be higher than the canvases in order for
+   * IMEs to appear on top.
+   */
+  z-index: 5;
+}
+
+.xterm .xterm-helper-textarea {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  /* Move textarea out of the screen to the far left, so that the cursor is not visible */
+  position: absolute;
+  opacity: 0;
+  left: -9999em;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: -5;
+  /** Prevent wrapping so the IME appears against the textarea at the correct position */
+  white-space: nowrap;
+  overflow: hidden;
+  resize: none;
+}
+
+.xterm .composition-view {
+  /* TODO: Composition position got messed up somewhere */
+  background: #000;
+  color: #FFF;
+  display: none;
+  position: absolute;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.xterm .composition-view.active {
+  display: block;
+}
+
+.xterm .xterm-viewport {
+  /* On OS X this is required in order for the scroll bar to appear fully opaque */
+  background-color: #000;
+  overflow-y: scroll;
+  cursor: default;
+  position: absolute;
+  right: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.xterm .xterm-screen {
+  position: relative;
+}
+
+.xterm .xterm-screen canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.xterm .xterm-scroll-area {
+  visibility: hidden;
+}
+
+.xterm-char-measure-element {
+  display: inline-block;
+  visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: -9999em;
+  line-height: normal;
+}
+
+.xterm {
+  cursor: text;
+}
+
+.xterm.enable-mouse-events {
+  /* When mouse events are enabled (eg. tmux), revert to the standard pointer cursor */
+  cursor: default;
+}
+
+.xterm.xterm-cursor-pointer {
+  cursor: pointer;
+}
+
+.xterm.column-select.focus {
+  /* Column selection mode */
+  cursor: crosshair;
+}
+
+.xterm .xterm-accessibility,
+.xterm .xterm-message {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 10;
+  color: transparent;
+}
+
+.xterm .live-region {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.xterm-dim {
+  opacity: 0.5;
+}
+
+.xterm-underline {
+  text-decoration: underline;
+}
+
+.xterm-strikethrough {
+  text-decoration: line-through;
+}
+
+.game-panel .cavas-holder-inner {
+  padding: 5px !important;
+  margin: 0px !important;
+}
+
+.fade-in {
+  visibility: visible !important;
+  opacity: 1 !important;;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+

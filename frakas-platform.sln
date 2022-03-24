@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32228.430
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{2D52A8EF-09A3-4C12-9284-78507BE06674}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "web", "containers\web\web.csproj", "{D43377DB-ADF2-46AB-AF8D-A76DDDA2669E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mulplay-shared-storage", "..\mulplay\mulplay-shared-storage\dotnet\mulplay-shared-storage.csproj", "{607E9A38-7617-4963-B101-CAF9D7FBEFED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2D52A8EF-09A3-4C12-9284-78507BE06674}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D52A8EF-09A3-4C12-9284-78507BE06674}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D52A8EF-09A3-4C12-9284-78507BE06674}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D52A8EF-09A3-4C12-9284-78507BE06674}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D43377DB-ADF2-46AB-AF8D-A76DDDA2669E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D43377DB-ADF2-46AB-AF8D-A76DDDA2669E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D43377DB-ADF2-46AB-AF8D-A76DDDA2669E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D43377DB-ADF2-46AB-AF8D-A76DDDA2669E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{607E9A38-7617-4963-B101-CAF9D7FBEFED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{607E9A38-7617-4963-B101-CAF9D7FBEFED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{607E9A38-7617-4963-B101-CAF9D7FBEFED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{607E9A38-7617-4963-B101-CAF9D7FBEFED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {78A0135B-A3FD-4458-B731-3A83B1B0F5F1}
+	EndGlobalSection
+EndGlobal
