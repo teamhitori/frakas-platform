@@ -1,15 +1,13 @@
 <div class="container-fluid">
-  <div class="row justify-content-center p-2" *ngIf="gameDefinition.isPublished">
+  <div class="row justify-content-center p-2" *ngIf="gameDefinition.isPublished == true">
     <mat-toolbar color="primary">
-      <span class="mx-auto">{{ gameDefinition.gameName }} is Live</span>
+      <span class="mx-auto">{{ gameDefinition.gameName }} is Published</span>
     </mat-toolbar>
   </div>
-  <div class="row p-2" *ngIf="gameDefinition.isPublished == false">
-    <div class="col-1">
-      <button mat-raised-button aria-label="Publish" color="primary" (click)="publish()">
-        <mat-icon>flash_on</mat-icon> Publish
-      </button>
-    </div>
+  <div class="row justify-content-center p-2" *ngIf="gameDefinition.isPublished == false">
+    <mat-toolbar color="warn">
+      <span class="mx-auto">{{ gameDefinition.gameName }} is currently Unpublished</span>
+    </mat-toolbar>
   </div>
   <div class="row p-2" *ngIf="gameDefinition.isPublished">
     <div class="col-6 mt-2 text-right">
@@ -22,7 +20,24 @@
       </button>
     </div>
   </div>
-  <div class="row p-2" *ngIf="gameDefinition.isPublished">
+  <div class="row p-2" *ngIf="gameDefinition.isPublished == false">
+    <div class="col-6"></div>
+    <div class="col-1">
+      <button mat-raised-button aria-label="Publish" color="primary" (click)="publish()">
+        <mat-icon>flash_on</mat-icon> Publish
+      </button>
+    </div>
+  </div>
+  <div class="row p-2" *ngIf="gameDefinition.isPublished == true">
+    <div class="col-6"></div>
+    <div class="col-1">
+      <button mat-raised-button aria-label="Publish" color="warn" (click)="unPublish()">
+        <mat-icon>flash_off</mat-icon> Unpublish
+      </button>
+    </div>
+  </div>
+
+  <!-- <div class="row p-2" *ngIf="gameDefinition.isPublished">
     <div class="col-6 mt-2 text-right">
       {{publishedDefinition?.isStarted && 'Stop / Restart Game' || 'Start Game'}}
     </div>
@@ -37,16 +52,16 @@
         <mat-icon>replay</mat-icon>
       </button>
     </div>
-  </div>
-  <div class="row p-2" *ngIf="gameDefinition.isPublished">
+  </div> -->
+  <!-- <div class="row p-2" *ngIf="gameDefinition.isPublished">
     <div class="col-6 mt-2 text-right">
       Active Players:
     </div>
     <div class="col-6 mt-2">
       {{ publishedDefinition?.activePlayerCount || 0 }}
     </div>
-  </div>
-  <div class="row p-2" *ngIf="gameDefinition.isPublished">
+  </div> -->
+  <!-- <div class="row p-2" *ngIf="gameDefinition.isPublished">
     <div class="col-6 mt-2 text-right">
       {{gameDefinition?.debugEnabled && 'Disable Game logs' || 'Enable Game logs'}}
     </div>
@@ -62,5 +77,5 @@
   <div id="xterm-container2" class="row p-2 game-log"
     [ngStyle]="{'visibility': gameDefinition?.debugEnabled && 'visible' || 'hidden'}">
 
-  </div>
+  </div> -->
 </div>

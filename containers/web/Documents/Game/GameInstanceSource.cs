@@ -1,7 +1,6 @@
 ﻿
 public record GameInstanceSource(
-     string feRef,
-     string beRef,
+     IEnumerable<string> feFiles,
      GameConfig gameConfig,
      GameInstance gameInstance
      );

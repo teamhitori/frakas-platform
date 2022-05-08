@@ -2,9 +2,10 @@ import * as appInsights from 'applicationinsights';
 import express from 'express';
 import * as httpProxy from 'http-proxy';
 import * as http from 'http';
+import net from 'net';
 import WebSocket, { WebSocketServer } from 'ws';
 
-import { AzStorage } from './AzStorage';
+import { azStorage } from './azStorage';
 import { GameContainer } from './gameContainer';
 import { ISocketConnectedDocument } from '../documents/ISocketConnectedDocument';
 import { Topic } from '../documents/Topic'
@@ -43,6 +44,25 @@ export class gameConnectionService {
         // parse application/json
         app.use(express.json());
 
+        app.get("/status/:gamePrimaryName/", async (req, res) => {
+            try {
+                if (this._containers[req.params.gamePrimaryName]) {
+                    res.json({
+                        res: true
+                    })
+                } else {
+                    res.json({
+                        res: false
+                    })
+                }
+
+
+            } catch (error) {
+                console.log(error);
+                res.sendStatus(500);
+            }
+        });
+
         app.get("/create-game/:gamePrimaryName/:containerRef", async (req, res) => {
             try {
                 await this._createGame(req.params.gamePrimaryName, req.params.containerRef)
@@ -69,40 +89,61 @@ export class gameConnectionService {
 
     private _initWebsocket() {
 
-        var proxyServer = http.createServer(function (req, res) {
+        var proxyServer = http.createServer((req, res) => {
             //proxy.web(req, res);
-          });
-          
-          //
-          // Listen to the `upgrade` event and proxy the
-          // WebSocket requests as well.
-          //
-          proxyServer.on('upgrade', function (req, socket, head) {
-            console.log(`upgrade`, req, head);
-            //proxy.ws(req, socket, head);
-          });
-        
-          console.log(`Starting proxy ${this._wsProxyPort}`)
-          
-          proxyServer.listen(this._wsProxyPort);
+        });
+
+        //
+        // Listen to the `upgrade` event and proxy the
+        // WebSocket requests as well.
+        //
+        proxyServer.on('upgrade', (req, socket, head) => {
+            console.log(`upgrade, url:`, req.url);
+
+            var gamePrimary = req.url?.split("/").join("");
+
+            if (!gamePrimary) {
+                console.log(`This url does not seem to have a gamePrimaryName: ${req.url}`);
+                return;
+            }
+
+            var container = this._containers[gamePrimary];
+
+            if (!container) {
+                console.log(`No container found for ${gamePrimary}`);
+                for (const key in this._containers) {
+                    console.log(`Container key:${key}`)
+                }
+                return;
+            }
+
+            console.log(`proxying gamePrimary:${gamePrimary} to ${container.wsPort}`)
+
+            container.proxy.ws(req, socket, head);
+        });
+
+        console.log(`Starting proxy ${this._wsProxyPort}`)
+
+        proxyServer.listen(this._wsProxyPort);
 
     }
 
     private async _createGame(gamePrimaryName: string, sourceRef: string) {
         try {
 
-            console.log(`createGame called. gamePrimaryName:${gamePrimaryName}`);
+            console.log(`createGame called. gamePrimaryName:${gamePrimaryName}, sourceRef: ${sourceRef}`);
 
-            var azStorage = new AzStorage();
+            var nextPort = await this.getNextPort();
 
-            var containerName = "reubenh-default-be";
-            await azStorage.downloadBESource(sourceRef, gamePrimaryName);
+            var storage = new azStorage();
+
+            await storage.downloadBESource(sourceRef, gamePrimaryName);
 
             if (!this._containers[gamePrimaryName]) {
-                this._containers[gamePrimaryName] = new GameContainer(this._nextWsPort, `/usersource/${gamePrimaryName}`);
+                this._containers[gamePrimaryName] = new GameContainer(nextPort, `/usersource/${gamePrimaryName}`);
             }
 
-            this._nextWsPort++;
+
 
             await this._containers[gamePrimaryName]?.create();
 
@@ -112,23 +153,55 @@ export class gameConnectionService {
         }
     }
 
-    private _destroyGame(gamePrimaryName: string) { 
+    private _destroyGame(gamePrimaryName: string) {
 
         console.log(`destroyGame called, gamePrimaryName:${gamePrimaryName}`);
         this._containers[gamePrimaryName]?.destroy();
 
         for (const connectionId in this._connectionGame) {
             if (Object.prototype.hasOwnProperty.call(this._connectionGame, connectionId)) {
-              const gamePrimaryName = this._connectionGame[connectionId];
+                const gamePrimaryName = this._connectionGame[connectionId];
 
-              if (gamePrimaryName == gamePrimaryName) {
-                var socket = this._connections[connectionId];
+                if (gamePrimaryName == gamePrimaryName) {
+                    var socket = this._connections[connectionId];
 
-                console.log(`Sending GameExit to connectionId:${connectionId}`)
+                    console.log(`Sending GameExit to connectionId:${connectionId}`)
 
-                socket?.send(JSON.stringify(<ISocketConnectedDocument>{ topic: Topic.gameEnd }));
-              }
+                    socket?.send(JSON.stringify(<ISocketConnectedDocument>{ topic: Topic.gameEnd }));
+                }
             }
-          }
+        }
     }
+
+    private async getNextPort(): Promise<number>{
+
+        while(await this.isPortInUse(this._nextWsPort)){
+            this._nextWsPort++;
+        }
+
+        return this._nextWsPort;
+    }
+
+    private async isPortInUse(port: number): Promise<boolean> {
+
+        return await new Promise<boolean>(resolve => {
+            var server = net.createServer(function (socket) {
+                socket.write('Echo server\r\n');
+                socket.pipe(socket);
+            });
+
+            server.on('error', function () {
+                console.log(`Port ${port} is free!`);
+                resolve(true);
+            });
+            server.on('listening', function () {
+                console.log(`Port ${port} in use`);
+                server.close();
+                resolve(false);
+            });
+
+            server.listen(port, '127.0.0.1');
+        });
+
+    };
 }

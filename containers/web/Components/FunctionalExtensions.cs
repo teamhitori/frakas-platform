@@ -79,7 +79,17 @@ public static class FunctionalExtensions
         // validate input
         var m = Regex.Match(gameName, @"^(?!\d)[a-zA-Z\d]+(?: [a-zA-Z\d]+)*$", RegexOptions.IgnoreCase);
 
-        return gameName.Count() <= 50 && m.Success;
+        return gameName.Count() <= 30 && m.Success;
+
+    }
+
+    public static bool IsValidPublishedGameName(this string gameName)
+    {
+
+        // validate input
+        var m = Regex.Match(gameName, @"^(?!\d)[a-zA-Z\d]+(?:-[a-zA-Z\d]+)*$", RegexOptions.IgnoreCase);
+
+        return gameName.Count() <= 30 && m.Success;
 
     }
 }

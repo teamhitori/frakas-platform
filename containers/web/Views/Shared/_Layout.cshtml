@@ -4,7 +4,15 @@
     <base href="/">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - web</title>
+
+    <meta property="og:image" itemprop="image" content="@Configuration["static_url"]assets/img/logo.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:site_name" content="@ViewData["Title"]">
+    <meta property="og:description" content="@ViewData["description"]" />
+    <meta property="og:updated_time" content="2020-02-05T23:10:58-06:00" />
+
+    <title>@ViewData["Title"]</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
@@ -15,7 +23,7 @@
             <nav id="nav-bar" class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow">
                 <div class="container">
                     <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                        <img src="assets/img/logo-white.svg" class="default-logo" alt="Frakas" width="127" height="31">
+                        <img src="@Configuration["static_url"]assets/img/logo-white.svg" class="default-logo" alt="Frakas" width="127" height="31">
                     </a>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                             aria-expanded="false" aria-label="Toggle navigation">
@@ -36,23 +44,18 @@
             @RenderBody()
         </main>
     </div>
-    <script type="text/javascript" src="assets/dist/app.bundle.js"></script>
-    <script type="text/javascript" src="assets/dist/editor.worker.bundle.js"></script>
-    <script type="text/javascript" src="assets/dist/json.worker.bundle.js"></script>
-    <script type="text/javascript" src="assets/dist/css.worker.bundle.js"></script>
-    <script type="text/javascript" src="assets/dist/html.worker.bundle.js"></script>
-    <script type="text/javascript" src="assets/dist/ts.worker.bundle.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]assets/dist/app.bundle.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]assets/dist/editor.worker.bundle.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]assets/dist/json.worker.bundle.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]assets/dist/css.worker.bundle.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]assets/dist/html.worker.bundle.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]assets/dist/ts.worker.bundle.js"></script>
 
-    <script type="text/javascript" src="runtime.js"></script>
-    <script type="text/javascript" src="polyfills.js"></script>
-    <script type="text/javascript" src="main.js"></script>
-    <link rel="stylesheet" href="styles.css" />
-    <script type="text/javascript" src="vendor.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]runtime.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]polyfills.js"></script>
+    <script type="text/javascript" src="@Configuration["static_url"]main.js"></script>
+    <link rel="stylesheet" href="@Configuration["static_url"]styles.css" />
+    <script type="text/javascript" src="@Configuration["static_url"]vendor.js"></script>
 
-    <environment include="Developmentx">
-        @*<link rel="stylesheet" href="styles.css" />*@
-        <script type="text/javascript" src="vendor.js"></script>
-        <script type="text/javascript" src="styles.js"></script>
-    </environment>
 </body>
 </html>

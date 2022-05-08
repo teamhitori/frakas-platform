@@ -17,11 +17,7 @@ var configuration = builder.Configuration;
 
 
 var azureSignalrConnectionString = configuration["Azure:SignalR:ConnectionString"];
-builder.Services.AddSignalR()
-    .AddAzureSignalR(options =>
-    {
-        options.ConnectionString = azureSignalrConnectionString;
-    });
+
 
 
 builder.Services.AddHttpClient<IHttpService, HttpService>()
@@ -31,19 +27,19 @@ builder.Services.AddSingleton(serviceProvider =>
     {
         var storageConfig = serviceProvider.GetRequiredService<IStorageConfig>();
         var storage = storageConfig.ToUserStorage($"TeamHitori.Mulplay.Container.Web.Components.GameContainer");
-        var hubContext = serviceProvider.GetRequiredService<IHubContext<GameHub, IGameClient>>();
+        var hubContext =  serviceProvider.GetRequiredService<IHubContext<GameHub, IGameClient>>();
         var logger = serviceProvider.GetRequiredService<ILogger<GameContainer>>();
         var httpService = serviceProvider.GetRequiredService<IHttpService>();
         //var grpcClient = serviceProvider.GetRequiredService<GameService.GameServiceClient>();
-        var websocketService = serviceProvider.GetRequiredService<IWebSocketService>();
+        // var websocketService = serviceProvider.GetRequiredService<IWebSocketService>();
 
-        var gameContainer = new GameContainer(hubContext, logger, websocketService, storageConfig, httpService);
+        var gameContainer = new GameContainer(hubContext, logger, storageConfig, httpService);
 
         var doc = storage.GetSingleton<GameInstances>().Result;
         var wrapper = doc?.GetObject();
         var instances = wrapper
             ?.items
-            ?.Where(i => false && !i.gameInstance.gameName.StartsWith("debug:"));
+            ?.Where(i => !i.gameInstance.gameName.StartsWith("debug:"));
         instances?.Foreach(async i =>
         {
             var publishName = string.Join(":", i.gameInstance.gameName.Split(":").Take(2));
@@ -77,7 +73,7 @@ builder.Services.AddSingleton(x =>
         return logger;
     });
 
-builder.Services.AddSingleton<IWebSocketService, WebSocketService>();
+//builder.Services.AddSingleton<IWebSocketService, WebSocketService>();
 
 builder.Services.AddSingleton(col =>
 {
@@ -93,6 +89,12 @@ builder.Services.AddSingleton(col =>
 
     return StorageExtensions.CreateStorage(blobConnectionString, endpoint, key, databaseId, collectionId, logger, cache);
 });
+
+builder.Services.AddSignalR()
+    .AddAzureSignalR(options =>
+    {
+        options.ConnectionString = azureSignalrConnectionString;
+    });
 
 // The following line enables Application Insights telemetry collection.
 builder.Services.AddApplicationInsightsTelemetry();
@@ -120,11 +122,11 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 builder.Services.AddMicrosoftIdentityWebApiAuthentication(configuration, "AzureAdB2C");
 
 builder.Services.AddAuthentication(o =>
-{
-    o.RequireAuthenticatedSignIn = true;
-    o.DefaultSignInScheme = OpenIdConnectDefaults.AuthenticationScheme;
-    o.DefaultAuthenticateScheme = OpenIdConnectDefaults.AuthenticationScheme;
-})
+    {
+        o.RequireAuthenticatedSignIn = true;
+        o.DefaultSignInScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        o.DefaultAuthenticateScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
     .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureAdB2C"));
 
 
@@ -157,8 +159,21 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.Use(async (context, next) =>
+{
+    var scheme = context.Request.Scheme;
+    if (scheme == "http")
+    {
+        context.Request.Scheme = "https";
+        //logger.LogInformation($"Middleware upgrade request: {context.Request.Scheme}://{context.Request.Host}");
+    }
+
+    // Call the next delegate/middleware in the pipeline
+    await next();
+});
 
 app.UseRouting();
 
@@ -166,6 +181,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSession();
+
+
 
 app.UseEndpoints(endpoints =>
     {

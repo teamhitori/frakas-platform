@@ -1,0 +1,30 @@
+version: '3.4'
+
+services:
+  frakas-proxy:
+    image: ${DOCKER_REGISTRY-}frakas-proxy:<version>
+    container_name: frakas-proxy
+    build:
+      context: containers/proxy
+      dockerfile: Dockerfile
+
+  frakas-web:
+    image: ${DOCKER_REGISTRY-}frakas-web:<version>
+    container_name: frakas-web
+    build:
+      context: containers/web
+      dockerfile: Dockerfile
+
+  frakas-build:
+    image: ${DOCKER_REGISTRY-}frakas-build:<version>
+    container_name: frakas-build
+    build:
+      context: containers/build
+      dockerfile: Dockerfile
+
+  frakas-dojo:
+    image: ${DOCKER_REGISTRY-}frakas-dojo:<version>
+    container_name: frakas-dojo
+    build:
+      context: containers/dojo
+      dockerfile: Dockerfile

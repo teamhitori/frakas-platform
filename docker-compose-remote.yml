@@ -1,0 +1,20 @@
+﻿version: '3.4'
+
+services:
+  frakas-proxy:
+    image: teamhitori/frakas-proxy:220508-1754
+    container_name: frakas-proxy
+
+  frakas-dojo:
+    image: teamhitori/frakas-dojo:220508-1754
+    container_name: frakas-dojo
+
+  frakas-build:
+    image: teamhitori/frakas-build:220508-1754
+    container_name: frakas-build
+
+  frakas-web:
+    image: teamhitori/frakas-web:220508-1754
+    container_name: frakas-web
+    volumes:
+      - "hitorifrakasprod-id:/app/wwwroot"

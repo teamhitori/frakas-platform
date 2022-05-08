@@ -1,15 +1,18 @@
-FROM node:latest
+FROM node:latest AS base
 
-COPY . /var/www
-WORKDIR /var/www
+COPY . /app
+WORKDIR /app
 EXPOSE 80
 
-RUN mkdir -p /var/www/build
+RUN apt-get update -y
+RUN apt install libsecret-1-0 -y
+
+RUN mkdir -p /app/build
 RUN npm install
 RUN npm run build
 
-# RUN apt-get update
-# RUN apt install libsecret-1
-
+FROM base AS final
+WORKDIR /app
+COPY --from=base /app/build .
 
 ENTRYPOINT ["npm", "run", "debug"]

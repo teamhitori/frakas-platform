@@ -120,7 +120,7 @@ public class WebSocketService : IWebSocketService
         if (_webSocket == null || _webSocket.State != WebSocketState.Open)
         {
             _webSocket = new ClientWebSocket();
-            var serviceUrl = new Uri("ws://mulplay-container-game:8080");
+            var serviceUrl = new Uri("ws://frakas-dojo:8080");
 
             var res = await Policy
                 .Handle<WebSocketException>()
@@ -156,7 +156,7 @@ public class WebSocketService : IWebSocketService
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Wesockets connection error");
+                        _logger.LogError(ex, "Websocket Connection error frakas-dojo:8080");
                         throw;
                     }
 

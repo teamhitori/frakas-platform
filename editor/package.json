@@ -4,7 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "npx ng serve",
-    "build": "npx ng build --output-path ./dist --output-hashing none --configuration development",
+    "build": "npx ng build --output-path ./dist-debug --output-hashing none --configuration development",
+    "build-prod": "npx ng build --output-path ./dist --output-hashing none --configuration production",
+    "build-prod-hash": "npx ng build --output-path ./dist --configuration production",
     "watch": "npx ng build --output-path ./dist --output-hashing none --watch --configuration development",
     "clean": ""
   },

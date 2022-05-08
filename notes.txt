@@ -1,0 +1,32 @@
++ add game name validation as per frakas-platform\editor\src\app\components\dialog-new-game\dialog-new-game.component.html
+
++ test multigame / multiplayer
++ load test
++ put main website live 
++ pretify error pages
++ look at connecting azure B2C to Wordpress
++ api - simplyfy subscribe
++ add onConnect to FE and rename on BE
++ onPlayer evnet on BE should have 2 args
++ launch browser on serve
+
+? npm package 0 dependencies
+? delete game
+? Can add User Logo
+- raw GET to /<name> should not create new game
+- Can add images
+- game url should use hyphen
+- Re-implement publish
+- re-implement public game
+- public game maximise screen on mobile
+- Ensure demo works on mobile
+- Ensure Whatappp link looks good
+- build push to azure not workin
+- second build not working
+- push game should show status
+- use game.frakas subdomain
+- ensure new game has correct frakas.json
+- can add Game Thumbnail
+
+Issue check list
+- reset wsl clock: hwclock -s

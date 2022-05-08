@@ -15,8 +15,9 @@ import { DialogNewGameComponent } from './components/dialog-new-game/dialog-new-
 import { PublishPanelComponent } from './components/publish-panel/publish-panel.component';
 import { DialogNewFileComponent } from './components/dialog-new-file/dialog-new-file.component';
 import { DialogConfirmationComponent } from './components/dialog-confirmation/dialog-confirmation.component';
-import { ImageDropComponent } from './components/image-drop/image-drop.component';
-import { MonacoEditorComponent } from './components/monaco-editor/monaco-editor.component'
+import { AssetsPanelComponent } from './components/assets-panel/assets-panel.component';
+import { MonacoEditorComponent } from './components/monaco-editor/monaco-editor.component';
+import { ConfigPanelComponent } from './components/config-panel/config-panel.component';
 
 @NgModule({
   declarations: [
@@ -27,8 +28,9 @@ import { MonacoEditorComponent } from './components/monaco-editor/monaco-editor.
     PublishPanelComponent,
     DialogNewFileComponent,
     DialogConfirmationComponent,
-    ImageDropComponent,
-    MonacoEditorComponent
+    AssetsPanelComponent,
+    MonacoEditorComponent,
+    ConfigPanelComponent
   ],
   imports: [
     BrowserModule,

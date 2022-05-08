@@ -1,4 +1,4 @@
-import { BlobServiceClient, StorageSharedKeyCredential, PublicAccessType,BlobHTTPHeaders } from "@azure/storage-blob";
+import { BlobServiceClient, StorageSharedKeyCredential,AnonymousCredential, PublicAccessType,BlobHTTPHeaders } from "@azure/storage-blob";
 import fs from 'fs';
 
 export class AzStorage {
@@ -18,6 +18,7 @@ export class AzStorage {
         // StorageSharedKeyCredential is only available in Node.js runtime, not in browsers
         const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
 
+        new AnonymousCredential()
         // List containers
         this._blobServiceClient = new BlobServiceClient(
             // When using AnonymousCredential, following url should include a valid SAS or support public access
@@ -28,29 +29,42 @@ export class AzStorage {
 
     public async uploadSource(containerName: string, folder: string): Promise<string> {
         // Create a container
-        containerName = containerName.toLocaleLowerCase().replace(" ", "-");
+        containerName = containerName.toLocaleLowerCase().split(" ").join("-");
         const containerClient = this._blobServiceClient.getContainerClient(containerName);
 
+        // console.log(`Delete container ${containerName} if exists..`);
+        // await containerClient.deleteIfExists();
+        
         const createContainerResponse = await containerClient.createIfNotExists({ access: "blob" });
-        console.log(`Create container ${containerName} successfully`, createContainerResponse.requestId);
+        console.log(`Created container ${containerName} successfully`, createContainerResponse.requestId);
 
         fs.readdir(folder, (err, files) => {
             files.forEach(async file => {
                 //const blobName = "newblob" + new Date().getTime();
                 const blockBlobClient = containerClient.getBlockBlobClient(file);
-                
-                const uploadBlobResponse = await blockBlobClient.uploadFile(`${folder}${file}`);
+
+                var mime = file.endsWith(".js") ? "text/javascript" : file.endsWith(".css") ? "text/css" : "application/octet-stream";
+
+                await blockBlobClient.deleteIfExists();
+
+                const uploadBlobResponse = await blockBlobClient.uploadFile(`${folder}${file}`, {
+                    blobHTTPHeaders: {blobContentType: mime}
+                });
                 
                 console.log(`Upload ${folder}${file} to ${containerName}/${file} successfully`, uploadBlobResponse.requestId);
             });
         });
+
+        for await (const blob of containerClient.listBlobsFlat()) {
+            console.log(`${containerName}: ${blob.name}`);
+          }
 
         return containerClient.url;
     }
 
     // public async uploadFESource(containerName: string, content: string): Promise<string> {
     //     // Create a container
-    //     containerName = containerName.toLocaleLowerCase().replace(" ", "-");
+    //     containerName = containerName.toLocaleLowerCase().split(" ").join("-");
     //     const containerClient = this._blobServiceClient.getContainerClient(containerName);
 
     //     const createContainerResponse = await containerClient.createIfNotExists({ access: "blob" });

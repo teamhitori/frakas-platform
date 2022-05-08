@@ -1,7 +1,7 @@
 import { BlobServiceClient, StorageSharedKeyCredential, PublicAccessType } from "@azure/storage-blob";
 import fs from 'fs';
 
-export class AzStorage {
+export class azStorage {
 
     private _blobServiceClient: BlobServiceClient;
 
@@ -30,12 +30,12 @@ export class AzStorage {
 
         try {
             if (!fs.existsSync("/usersource")) {
-                console.log("Creating usersource");
+                console.log("Creating /usersource");
                 fs.mkdirSync("/usersource");
             }
 
             if (!fs.existsSync(`/usersource/${targetFolder}/`)) {
-                console.log(`Creating usersource/${targetFolder}/`);
+                console.log(`Creating /usersource/${targetFolder}/`);
                 fs.mkdirSync(`/usersource/${targetFolder}/`);
             }
 
@@ -45,21 +45,35 @@ export class AzStorage {
             for await (const blob of containerClient.listBlobsFlat()) {
                 console.log(blob.name);
 
-                const blockBlobClient = containerClient.getBlockBlobClient(blob.name);
+                var isSubDirectory = blob.name.split("/").length > 1;
 
+                if(isSubDirectory){
+                    console.log(`Skipping ${blob.name} as in sub directory`);
+                    continue;
+                }
+
+                const blockBlobClient = containerClient.getBlockBlobClient(blob.name);
                 const downloadBlockBlobResponse = await blockBlobClient.download(0);
 
-                downloadBlockBlobResponse.readableStreamBody
-                    ?.on('error', console.error)
-                    .pipe(fs.createWriteStream(`/usersource/${targetFolder}/${blob.name}`));
-                console.log(`Downloaded ${blob.name} to /usersource/${targetFolder}/${blob.name}`);
+                await new Promise((resolve, reject) => {
+
+                    downloadBlockBlobResponse.readableStreamBody
+                        ?.on('error', ex =>{
+                            console.log(ex)
+                            reject();
+                        })
+                        ?.on('close', () => {
+                            console.log(`Downloaded ${blob.name} to /usersource/${targetFolder}/${blob.name}`);
+                            resolve({});
+                          })
+                        .pipe(fs.createWriteStream(`/usersource/${targetFolder}/${blob.name}`));
+                });
             }
 
             console.log("Download complete")
         } catch (err) {
             console.log(err);
         }
-
     }
 
     streamToFile(fileName: string, readableStream: NodeJS.ReadableStream) {

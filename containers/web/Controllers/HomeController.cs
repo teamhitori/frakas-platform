@@ -67,7 +67,7 @@ public class HomeController : Controller
         string data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         byte[] buffer = Encoding.ASCII.GetBytes(data);
         int timeout = 120;
-        PingReply reply = pingSender.Send("mulplay-container-game", timeout, buffer, options);
+        PingReply reply = pingSender.Send("frakas-dojo", timeout, buffer, options);
         if (reply.Status == IPStatus.Success)
         {
             _logger.LogInformation("Address: {0}", reply.Address.ToString());
@@ -77,7 +77,7 @@ public class HomeController : Controller
             _logger.LogInformation("Buffer size: {0}", reply.Buffer.Length);
         }
 
-        var uri = "http://mulplay-container-game";
+        var uri = "http://frakas-game";
         var responsePost = await _httpClient.GetAsync(uri);
         var resp = await responsePost.Content.ReadAsStringAsync();
         return resp;

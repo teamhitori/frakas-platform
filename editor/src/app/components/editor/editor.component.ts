@@ -86,7 +86,7 @@ export class EditorComponent {
 
   //public fileIsDirty: boolean = false;
   //public gameInstance!: IGameInstance;
-  public sourceFERef: string = "";
+  //public sourceFERef: string = "";
   public codeFiles: IEditorCodeFile[] = [];
 
 
@@ -146,10 +146,8 @@ export class EditorComponent {
   public isGameActive = false;
   private _playerEntered = false;
 
-  //private _signalrConnection?: signalR.HubConnection;
-  private _gameWindow?: IGameWindow;
 
-  private _subjectUpdateConfig = new Subject<number>();
+
 
   public gameAssets: IGameAsset[] = []
 
@@ -174,13 +172,6 @@ export class EditorComponent {
     private _websocketService: WebsocketService,
     public dialog: MatDialog,
     public sanitizer: DomSanitizer) {
-
-
-    window.gameApiProvider = <IGameApiProvider>{
-      set: (gameWindow: IGameWindow) => {
-        this._gameWindow = gameWindow;
-      }
-    };
 
   }
 
@@ -232,19 +223,6 @@ export class EditorComponent {
 
       this.showDebugWindow();
 
-      this._subjectUpdateConfig
-        .pipe(
-          bufferTime(3000),
-        ).subscribe(async events => {
-          console.log(`buffer ${events.length}`)
-
-          if (events.length) {
-
-            this.currentGameDefinition.gameConfig.screenRatio = events[events.length - 1];
-            await this.upsertCode();
-          }
-        });
-
 
       const fitAddon = new FitAddon();
       this._terminal.loadAddon(fitAddon);
@@ -277,20 +255,7 @@ export class EditorComponent {
     console.log("Upload File complete");
   }
 
-  fillScreenChange(event: MatCheckboxChange) {
-    console.log(event);
 
-    this.currentGameDefinition.gameConfig.fillScreen = event.checked;
-  }
-
-  screenRatioChange(event: any) {
-
-    if (event.target.value) {
-
-      this._subjectUpdateConfig.next(+event.target.value);
-    }
-
-  }
 
   async showDialogNewFile() {
     const dialogRef = this.dialog.open(DialogNewFileComponent, {
@@ -516,7 +481,7 @@ export class EditorComponent {
     });
   }
 
-  async showSettingsWindow() {
+  async showConfigWindow() {
     this.screen = EditorScreen.settings;
     this.isHandset$.subscribe(res => {
       if (res) {
@@ -554,9 +519,8 @@ export class EditorComponent {
   private async _setGameDefinition(gameDefinition: IGameDefinition) {
 
     this.currentGameDefinition = gameDefinition;
-    this.sourceFERef = await this._httpService.getsourceFERef(gameDefinition.gameName);
-
     this.codeFiles = []
+
     for (const codeFile of this.currentGameDefinition.codeFiles) {
       this.codeFiles.push(<IEditorCodeFile>{
         changed: false,
@@ -604,6 +568,9 @@ export class EditorComponent {
     }
   }
 
+  async upsertConfig() {
+    await this._httpService.upsertGameConfig(this.currentGameDefinition.gameName, this.currentGameDefinition.gameConfig);
+  }
 
   async upsertCode() {
 
@@ -625,7 +592,7 @@ export class EditorComponent {
 
         this.noChanges = true;
 
-        await this._httpService.upsertCode(codeFiles)
+        await this._httpService.upsertCode(this.currentGameDefinition.gameName, codeFiles)
 
         await this._httpService.upsertGameConfig(this.currentGameDefinition.gameName, this.currentGameDefinition.gameConfig);
 
@@ -1060,10 +1027,6 @@ export class EditorComponent {
       await this._httpService.destroyGame(this._currentGamePrimaryName);
     }
 
-
-
-
-    this._gameWindow?.disconnect();
   }
 
 
@@ -1075,7 +1038,6 @@ export class EditorComponent {
 
       console.log('disconnected');
       this.isGameActive = false;
-      this._gameWindow?.disconnect();
     });
   }
 
@@ -1116,7 +1078,7 @@ export class EditorComponent {
         this._snackBar.open('Compilation Complete', 'Ok', {
           duration: 3000
         });
-        this.sourceFERef = status.urlFE;
+        //this.sourceFERef = status.urlFE;
         //this.gameWindow?.setGameWindowSource(status.source);
 
         this._terminal.clear();

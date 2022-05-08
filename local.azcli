@@ -1,0 +1,7 @@
+$frakasPlatform = "C:\repo\mine\frakas-platform\"
+cd $frakasPlatform
+docker build . -f ./Dockerfile_Web -t frakas-web-test:latest
+
+docker run -it --entrypoint /bin/bash frakas-web-test:latest
+
+docker compose -f ./docker-compose.yml -f ./docker-compose.override.yml up

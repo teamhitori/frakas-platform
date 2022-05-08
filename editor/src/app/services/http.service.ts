@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEventType, HttpHeaders, HttpRequest } from '@angular/common/http';
 import { Observable, of, Subject, throwError } from 'rxjs';
-import { last, map, tap } from 'rxjs/operators';
+import { catchError, last, map, tap } from 'rxjs/operators';
 import { ICreateGameInDef } from '../documents/ICreateGameInDef'
 import { ICreateGameOutDef } from '../documents/ICreateGameOutDef'
 import { IPlayerEventWrapper } from '../documents/IPlayerEventWrapper';
@@ -48,6 +48,14 @@ export class HttpService {
     return this.http
       .get(`${environment.apiBase}/api/editorApi/get-assets/${gameName}`)
       .pipe(
+        catchError(error => {
+          if (error.error instanceof ErrorEvent) {
+            console.log(`Error: ${error.error.message}`);
+          } else {
+            console.log(`Error: ${error.error.message}`);
+          }
+          return of([]);
+        }),
         map((res: any) => {
           console.log(res);
           return <string[]>res;
@@ -142,25 +150,30 @@ export class HttpService {
 
 
   public async upsertGameConfig(gameName: string, gameConfig: IGameConfig): Promise<void> {
-    console.log(`Called upsertGameConfig`);
+
+    var publishedGameName = gameName.toLocaleLowerCase().split(" ").join("-");
+
+    console.log(`Called upsertGameConfig: ${publishedGameName}`);
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     const body = JSON.stringify(gameConfig);
 
     return this.http
-      .post(`${environment.apiBase}/api/editorApi/upsert-config/${gameName}`, body, { headers: headers })
+      .post(`${environment.apiBase}/api/editorApi/upsert-config/${publishedGameName}`, body, { headers: headers })
       .pipe(
         map(() => {
         })
       ).toPromise();
   }
 
-  public async upsertCode(codeFiles: ICodeFile[]): Promise<void> {
-    console.log(`Called upsertCode`);
+  public async upsertCode(gameName: string, codeFiles: ICodeFile[]): Promise<void> {
+    var publishedGameName = gameName.toLocaleLowerCase().split(" ").join("-");
+
+    console.log(`Called upsertCode: ${publishedGameName}`);
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     const body = JSON.stringify(codeFiles);
 
     return this.http
-      .post(`${environment.apiBase}/api/editorApi/upsert-code`, body, { headers: headers })
+      .post(`${environment.apiBase}/api/editorApi/upsert-code/${publishedGameName}`, body, { headers: headers })
       .pipe(
         map(() => {
         })
@@ -207,10 +220,12 @@ export class HttpService {
   }
 
   public async createGame(gameName: string): Promise<IGameInstanceSource> {
-    console.log(`Called createGame`);
+
+    var publishedGameName = gameName.toLocaleLowerCase().split(" ").join("-");
+    console.log(`Called createGame ${publishedGameName}`);
 
     return this.http
-      .get(`${environment.apiBase}/api/editorApi/create-game/${gameName}`)
+      .get(`${environment.apiBase}/api/editorApi/create-game/${publishedGameName}`)
       .pipe(
         map((res: any) => {
           console.log(res);
@@ -277,35 +292,35 @@ export class HttpService {
       ).toPromise();
   }
 
-  public async createGameDefinition(gameName: string): Promise<IGameDefinition|undefined> {
+  public async createGameDefinition(gameName: string): Promise<IGameDefinition | undefined> {
     console.log(`createGameDefinition`);
 
     try {
       return this.http
-      .get(`${environment.apiBase}/api/editorApi/create-definition/${gameName}`)
-      .pipe(
-        map((res: any) => {
-          console.log(res);
-          return <IGameDefinition>res;
-        })
-      ).toPromise();
+        .get(`${environment.apiBase}/api/editorApi/create-definition/${gameName}`)
+        .pipe(
+          map((res: any) => {
+            console.log(res);
+            return <IGameDefinition>res;
+          })
+        ).toPromise();
     } catch (error) {
       return undefined
     }
   }
 
-  public async getGameDefinition(publishedGameName: string): Promise<IGameDefinition|undefined> {
+  public async getGameDefinition(publishedGameName: string): Promise<IGameDefinition | undefined> {
     console.log(`getGameDefinition`);
 
     try {
       return this.http
-      .get(`${environment.apiBase}/api/editorApi/get-definition/${publishedGameName}`)
-      .pipe(
-        map((res: any) => {
-          console.log(res);
-          return <IGameDefinition>res;
-        })
-      ).toPromise();
+        .get(`${environment.apiBase}/api/editorApi/get-definition/${publishedGameName}`)
+        .pipe(
+          map((res: any) => {
+            console.log(res);
+            return <IGameDefinition>res;
+          })
+        ).toPromise();
     } catch (error) {
       return undefined
     }
@@ -342,6 +357,19 @@ export class HttpService {
 
     return this.http
       .get(`${environment.apiBase}/api/editorApi/publish/${gameName}`)
+      .pipe(
+        map((res: any) => {
+          console.log(res);
+          return <boolean>res;
+        })
+      ).toPromise();
+  }
+
+  public async unPublish(gameName: string): Promise<boolean> {
+    console.log(`Called publish`);
+
+    return this.http
+      .get(`${environment.apiBase}/api/editorApi/un-publish/${gameName}`)
       .pipe(
         map((res: any) => {
           console.log(res);

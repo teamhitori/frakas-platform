@@ -6,8 +6,8 @@ EXPOSE 80
 # RUN npm install
 # RUN npm i typescript -g
 
-# RUN apt-get update
-# RUN apt install libsecret-1
+RUN apt-get -y update
+RUN apt install libsecret-1-0 -y
 
 ENTRYPOINT ["tail"]
 CMD ["-f","/dev/null"]

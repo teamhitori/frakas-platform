@@ -17,57 +17,59 @@ public record GameDefinition(
 
 public static class GameDefinitionExtensions
 {
-    public async static Task<string> GetFECode(this Storage storage, string gameName)
-    {
-        var frontEndCodeDoc = await storage.FindDocumentByPrimaryName<string>($"{gameName}:{CodeType.FrontendLogic}");
-        var frontEndCode = frontEndCodeDoc.GetObject().DoIfNull(() =>
-        {
-            //var code = new CompiledCode(gameName, CodeType.FrontendLogic, "");
-            _ = storage.Upsert("", primaryNameIN: $"{gameName}:{CodeType.FrontendLogic}");
-            return "";
-        });
-        return frontEndCode;
-    }
+    //public async static Task<string> GetFECode(this Storage storage, string gameName)
+    //{
+    //    var frontEndCodeDoc = await storage.FindDocumentByPrimaryName<string>($"{gameName}:{CodeType.FrontendLogic}");
+    //    var frontEndCode = frontEndCodeDoc.GetObject().DoIfNull(() =>
+    //    {
+    //        //var code = new CompiledCode(gameName, CodeType.FrontendLogic, "");
+    //        _ = storage.Upsert("", primaryNameIN: $"{gameName}:{CodeType.FrontendLogic}");
+    //        return "";
+    //    });
+    //    return frontEndCode;
+    //}
 
-    public async static Task<string> GetBECode(this Storage storage, string gameName)
-    {
-        var backendCodeDoc = await storage.FindDocumentByPrimaryName<string>($"{gameName}:{CodeType.BackendLogic}");
-        var backendCode = backendCodeDoc.GetObject().DoIfNull(() =>
-        {
-            //var code = new CompiledCode(gameName, CodeType.BackendLogic, "");
-            _ = storage.Upsert("", primaryNameIN: $"{gameName}:{CodeType.BackendLogic}");
-            return "";
-        });
+    //public async static Task<string> GetBECode(this Storage storage, string gameName)
+    //{
+    //    var backendCodeDoc = await storage.FindDocumentByPrimaryName<string>($"{gameName}:{CodeType.BackendLogic}");
+    //    var backendCode = backendCodeDoc.GetObject().DoIfNull(() =>
+    //    {
+    //        //var code = new CompiledCode(gameName, CodeType.BackendLogic, "");
+    //        _ = storage.Upsert("", primaryNameIN: $"{gameName}:{CodeType.BackendLogic}");
+    //        return "";
+    //    });
 
-        return backendCode;
-    }
+    //    return backendCode;
+    //}
 
 
-    public async static Task<GameDefinition> GetLatest(Storage storage, Storage storagePublish, string publishedGameName, string gameName = null)
+    public async static Task<GameDefinition?> GetLatest(Storage storage, Storage storagePublish, string publishedGameName, bool create)
     {
         var gameConfigDoc = await storage.FindDocumentByPrimaryName<GameConfig>(publishedGameName);
         var gameConfig = gameConfigDoc.GetObject();
 
         if (gameConfig == null)
         {
-
-            storage.LogInformation($"GetLatest {publishedGameName} GameConfig does not exist, creating new with name { gameName ?? publishedGameName }");
-            gameConfig = new GameConfig(gameName ?? publishedGameName);
+            if(!create)
+            {
+                storage.LogInformation($"GetLatest {publishedGameName} GameConfig does not exist");
+                return null;
+            }
+            storage.LogInformation($"GetLatest {publishedGameName} GameConfig does not exist, creating new with name { publishedGameName }");
+            gameConfig = new GameConfig(publishedGameName);
             await storage.Upsert(gameConfig, primaryNameIN: publishedGameName);
         }
 
-        var codeFiles = gameConfig.codeFileNames?.Select(async fileName =>
-        {
-            var codeDoc = await storage.FindDocumentByPrimaryName<CodeFile>($"{publishedGameName}:{fileName}");
-            return codeDoc.GetObject().DoIfNull(() =>
-            {
-                var logic = new CodeFile(publishedGameName, fileName, "");
-                _ = storage.Upsert(logic, primaryNameIN: $"{publishedGameName}:{CodeType.FrontendLogic}");
-                return logic;
-            });
-        }).Select(t => t.Result).ToList();
+        var codeFiles = gameConfig.codeFileNames
+            ?.Select(async fileName =>
+                {
+                    var codeDoc = await storage.FindDocumentByPrimaryName<CodeFile>($"{publishedGameName}:{fileName}");
+                    return codeDoc.GetObject();
+                })
+            .Where(code => code?.Result != null)
+            .Select(t => t.Result).ToList();
 
-        var prevLogsDoc = await storage.FindDocumentByPrimaryName<string>($"{gameName}-prevLogs");
+        var prevLogsDoc = await storage.FindDocumentByPrimaryName<string>($"{publishedGameName}-prevLogs");
         var prevLogs = prevLogsDoc.GetObject() ?? "";
 
         codeFiles ??= new List<CodeFile>();

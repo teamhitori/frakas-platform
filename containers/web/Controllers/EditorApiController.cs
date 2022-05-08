@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Azure.Storage.Sas;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -35,21 +36,21 @@ public class EditorApiController : ControllerBase
         this._httpService = httpService;
     }
 
-    [HttpGet("create-game/{gameName}")]
-    public async Task<GameInstanceSource?> createGame(string gameName, [FromQuery(Name = "isDebug")] bool isDebug = true)
+    [HttpGet("create-game/{publishedGameName}")]
+    public async Task<GameInstanceSource?> createGame(string publishedGameName, [FromQuery(Name = "isDebug")] bool isDebug = true)
     {
         try
         {
             var gameInstances = _gameContainer.ActiveGameInstances;
             var userName = User.GetUserName();
-            var publishedGameName = gameName.ToLower().Replace(" ", "-");
+            // var publishedGameName = gameName.ToLower().Replace(" ", "-");
 
             var storage = _storageConfig.ToUserStorage(HttpContext);
             storage.LogInformation($"create-game  Called");
 
-            if (!gameName.IsValidGameName())
+            if (!publishedGameName.IsValidPublishedGameName())
             {
-                storage.LogInformation($"Game name {gameName} is invalid");
+                storage.LogInformation($"Game name {publishedGameName} is invalid");
                 return null;
             }
 
@@ -57,15 +58,19 @@ public class EditorApiController : ControllerBase
 
             storagePublish.LogInformation("create-game Called");
 
-            var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, gameName);
-            var feRef = await storage.GetFECode(publishedGameName);
-            var beRef = await storage.GetBECode(publishedGameName);
+            var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, true);
 
-            if (string.IsNullOrEmpty(feRef) || string.IsNullOrEmpty(beRef)) return null;
+            if (gameDefinition == null)
+            {
+                storage.LogInformation($"Game name {publishedGameName} does not exist");
+                return null;
+            }
+
+            var files = await storagePublish.ListFilesAsync();
 
             var activeInstance = gameInstances
                 .FirstOrDefault(i =>
-                    i.gameInstance.gameName == gameName &&
+                    i.gameInstance.publishedGameName == publishedGameName &&
                     i.gameInstance.author == userName &&
                     i.gameInstance.isDebug == isDebug);
 
@@ -73,9 +78,9 @@ public class EditorApiController : ControllerBase
             {
                 var gamePrimaryName = Guid.NewGuid().ToString();
 
-                var gameInstance = new GameInstance(gameName, publishedGameName, gamePrimaryName, userName, "0.0.0.0", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ssZ"), isDebug, false, true);
+                var gameInstance = new GameInstance(gameDefinition.gameName, publishedGameName, gamePrimaryName, userName, "0.0.0.0", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ssZ"), isDebug, false, true);
 
-                activeInstance = new GameInstanceSource(feRef, beRef, gameDefinition.gameConfig, gameInstance);
+                activeInstance = new GameInstanceSource(files, gameDefinition.gameConfig, gameInstance);
 
                 await _gameContainer.CreateGame(activeInstance);
             }
@@ -98,19 +103,19 @@ public class EditorApiController : ControllerBase
         await _gameContainer.DestroyGame(gamePrimaryName);
     }
 
-    [HttpPost("upsert-config/{gameName}")]
-    public async Task<bool> UpsertConfig(string gameName, [FromBody] GameConfig gameConfig)
+    [HttpPost("upsert-config/{publishedGameName}")]
+    public async Task<bool> UpsertConfig(string publishedGameName, [FromBody] GameConfig gameConfig)
     {
         var storage = _storageConfig.ToUserStorage(HttpContext);
-        storage.LogInformation($"upsert-config/{gameName}  Called");
+        storage.LogInformation($"upsert-config/{publishedGameName}  Called");
 
-        if (!gameName.IsValidGameName())
+        if (!publishedGameName.IsValidPublishedGameName())
         {
-            storage.LogInformation($"Game name {gameName} is invalid");
+            storage.LogInformation($"Game name {publishedGameName} is invalid");
             return false;
         }
 
-        var publishedGameName = gameName.ToLower().Replace(" ", "-");
+        //var publishedGameName = gameName.ToLower().Replace(" ", "-");
 
         try
         {
@@ -127,12 +132,30 @@ public class EditorApiController : ControllerBase
         return false;
     }
 
-    [HttpPost("upsert-code")]
-    public async Task<bool> UpsertCode([FromBody] IEnumerable<CodeFile> codeFiles)
+    [HttpGet("poll-build/{publishedGameName}")]
+    public async Task<bool> pollBuild(string publishedGameName)
+    {
+        string? userName = User.GetUserName();
+
+        if (!publishedGameName.IsValidPublishedGameName())
+        {
+            return false;
+        }
+
+        return _gameContainer.IsCompiling(userName, publishedGameName);
+    }
+
+    [HttpPost("upsert-code/{publishedGameName}")]
+    public async Task<bool> UpsertCode([FromBody] IEnumerable<CodeFile> codeFiles, string publishedGameName)
     {
         string? userName = User.GetUserName();
         var storage = _storageConfig.ToUserStorage(HttpContext);
-        storage.LogInformation($"upsert-code Called");
+        storage.LogInformation($"upsert-code Called: {publishedGameName}");
+
+        if (!publishedGameName.IsValidPublishedGameName())
+        {
+            return false;
+        }
 
         try
         {
@@ -144,8 +167,6 @@ public class EditorApiController : ControllerBase
                     return false;
                 }
 
-                // primaryNameIn - case insensitive
-                await storage.Upsert(codeFile, primaryNameIN: $"{codeFile.gameName}:{codeFile.fileName}");
             }
 
             if (codeFiles.Any())
@@ -153,8 +174,18 @@ public class EditorApiController : ControllerBase
                 var body = codeFiles.ToDictionary(key => $"{key.fileName}", val => $"{val.code}");
                 var bodyStr = body.ToJDoc().content;
 
-                _gameContainer.StartCompile(storage.UserId, userName, codeFiles.First().gameName, bodyStr);
+                _gameContainer.StartCompile(storage.UserId, userName, publishedGameName, bodyStr);
             }
+
+            _ = Task.Run(async () =>
+            {
+                foreach (var codeFile in codeFiles)
+                {
+                    // primaryNameIn - case insensitive
+                    await storage.Upsert(codeFile, primaryNameIN: $"{publishedGameName}:{codeFile.fileName}");
+                }
+            });
+
 
             //await _gameContainer.NotifyReload(gameLogic.gameName);
 
@@ -168,7 +199,37 @@ public class EditorApiController : ControllerBase
         return false;
     }
 
+    [HttpGet("get-username")]
+    public string getUserName()
+    {
+        var userName = User.GetUserName();
+        return $"{userName}";
+    }
 
+
+    [HttpGet("get-token/{publishedGameName}")]
+    public async Task<string> getToken(string publishedGameName)
+    {
+        var storage = _storageConfig.ToUserStorage(HttpContext);
+        storage.LogInformation($"get-active/{publishedGameName} Called");
+
+        if (!publishedGameName.IsValidPublishedGameName())
+        {
+            storage.LogInformation($"Game name {publishedGameName} is invalid");
+            return null;
+        }
+
+        var userName = User.GetUserName();
+
+        // VERSIONING
+        var storagePublish = _storageConfig.ToUserStorage($"{userName}-{publishedGameName}");
+
+        var permissions = BlobSasPermissions.List | BlobSasPermissions.Read | BlobSasPermissions.Write;
+        var sasToken = storagePublish.GetSasToken(permissions);
+
+        return sasToken;
+
+    }
 
     [HttpGet("get-active/{gameName}")]
     public IEnumerable<GameInstance> getActive(string gameName)
@@ -216,7 +277,6 @@ public class EditorApiController : ControllerBase
         {
             storagePublish.LogInformation("get-assets Called");
 
-
             var resultSegment = storagePublish.BlobContainerClient.GetBlobsAsync()
                 .AsPages(default, 50);
 
@@ -225,7 +285,8 @@ public class EditorApiController : ControllerBase
             {
                 foreach (BlobItem blobItem in blobPage.Values)
                 {
-                    items.Add(blobItem.Name);
+                    if (blobItem.Name.StartsWith("assets/"))
+                        items.Add(blobItem.Name);
                 }
             }
         }
@@ -249,26 +310,6 @@ public class EditorApiController : ControllerBase
         return gameDefs.Select(x => x.GetObject().gameName).Where(name => !string.IsNullOrEmpty(name));
     }
 
-    [HttpGet("get-source-feref/{gameName}")]
-    public async Task<string> getFERef(string gameName)
-    {
-        // To lower
-        var userName = User.GetUserName();
-        var publishedGameName = gameName.ToLower().Replace(" ", "-");
-
-        var storage = _storageConfig.ToUserStorage(HttpContext);
-        storage.LogInformation($"get-source-feref/{gameName}");
-
-        if (!gameName.IsValidGameName())
-        {
-            storage.LogInformation($"Game name {gameName} is invalid");
-            return null;
-        }
-
-        var feRef = await storage.GetFECode(publishedGameName);
-
-        return feRef.ToJDoc().content;
-    }
 
     [HttpGet("create-definition/{gameName}")]
     public async Task<GameDefinition> CreateDefinition(string gameName)
@@ -294,7 +335,7 @@ public class EditorApiController : ControllerBase
 
         storage.LogInformation("Game Get Called");
 
-        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, gameName);
+        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, true);
 
         return gameDefinition;
     }
@@ -326,7 +367,7 @@ public class EditorApiController : ControllerBase
 
         storage.LogInformation("Game Get Called");
 
-        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, gameName);
+        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, false);
 
         return gameDefinition;
     }
@@ -349,7 +390,7 @@ public class EditorApiController : ControllerBase
 
         var storagePublish = _storageConfig.ToUserStorage($"{userName}-{publishedGameName}");
 
-        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, gameName);
+        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, false);
 
         var publishedDefinition = PublishedDefinitionExtensions.GetLatest(gameDefinition, _gameContainer, userName);
 
@@ -448,11 +489,10 @@ public class EditorApiController : ControllerBase
 
         var storagePublish = _storageConfig.ToUserStorage($"{userName}-{publishedGameName}");
 
-        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, gameName);
-        var feRef = await storage.GetFECode(publishedGameName);
-        var beRef = await storage.GetBECode(publishedGameName);
+        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, false);
+        var files = await storagePublish.ListFilesAsync();
 
-        var publishProfile = new PublishProfile(gameDefinition, feRef, beRef, userName, "0.0.0.0", DateTime.Now, false);
+        var publishProfile = new PublishProfile(gameDefinition, userName, "0.0.0.0", DateTime.Now, false);
 
         await storagePublish.Upsert(publishProfile, true);
 
@@ -460,6 +500,8 @@ public class EditorApiController : ControllerBase
         var activeInstance = gameInstances.FirstOrDefault(i => i.gameInstance.gameName == gameName &&
             i.gameInstance.author == userName &&
             i.gameInstance.version == publishProfile.version);
+
+
 
         if (activeInstance != null)
         {
@@ -472,7 +514,7 @@ public class EditorApiController : ControllerBase
             var gamePrimaryName = Guid.NewGuid().ToString();
 
             var gameInstance = new GameInstance(gameName, publishedGameName, gamePrimaryName, userName, publishProfile.version, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ssZ"), false, false, false);
-            activeInstance = new GameInstanceSource(feRef, beRef, gameDefinition.gameConfig, gameInstance);
+            activeInstance = new GameInstanceSource(files, gameDefinition.gameConfig, gameInstance);
 
             await _gameContainer.CreateGame(activeInstance);
 
@@ -499,11 +541,8 @@ public class EditorApiController : ControllerBase
             return false;
         }
 
-        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, gameName);
-        var feRef = await storage.GetFECode(publishedGameName);
-        var beRef = await storage.GetBECode(publishedGameName);
-
-        var publishProfile = new PublishProfile(gameDefinition, feRef, beRef, userName, "0.0.0.0", DateTime.Now, false);
+        var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, false);
+        var publishProfile = new PublishProfile(gameDefinition, userName, "0.0.0.0", DateTime.Now, false);
 
         var doc = storagePublish.CreateSingleton(publishProfile);
 
@@ -577,16 +616,16 @@ public class EditorApiController : ControllerBase
         {
             var gamePrimaryName = Guid.NewGuid().ToString();
 
-            var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, gameName);
-            var feRef = await storage.GetFECode(publishedGameName);
-            var beRef = await storage.GetBECode(publishedGameName);
+            var gameDefinition = await GameDefinitionExtensions.GetLatest(storage, storagePublish, publishedGameName, false);
 
-            publishProfile = new PublishProfile(gameDefinition, feRef, beRef, userName, "0.0.0.0", DateTime.Now, false);
+            var files = await storagePublish.ListFilesAsync();
+
+            publishProfile = new PublishProfile(gameDefinition, userName, "0.0.0.0", DateTime.Now, false);
 
             await storagePublish.Upsert(publishProfile, true);
 
             var gameInstance = new GameInstance(gameName, publishedGameName, gamePrimaryName, userName, publishProfile.version, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ssZ"), false, false, false);
-            var activeInstance = new GameInstanceSource(feRef, beRef, gameDefinition.gameConfig, gameInstance);
+            var activeInstance = new GameInstanceSource(files, gameDefinition.gameConfig, gameInstance);
 
             await _gameContainer.CreateGame(activeInstance);
 

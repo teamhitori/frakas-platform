@@ -85,11 +85,17 @@ export class PublishPanelComponent implements OnInit {
   }
 
   async publish() {
-    await this._httpService.publish(this.gameDefinition.gameName);
+    var isPublished = await this._httpService.publish(this.gameDefinition.gameName);
+    if(isPublished) {
+      this.gameDefinition.isPublished = true;
+    }
   }
 
-  unPublish() {
-
+  async unPublish() {
+    var isUnPublished = await this._httpService.unPublish(this.gameDefinition.gameName);
+    if(isUnPublished) {
+      this.gameDefinition.isPublished = false;
+    }
   }
 
   openGame() {

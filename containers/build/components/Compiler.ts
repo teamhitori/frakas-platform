@@ -7,19 +7,14 @@ import * as MurmurHash3 from 'imurmurhash';
 
 export class Compiler {
 
-    //private _isStarted: boolean = false;
-
     private _isBuildComplete: boolean = false;
     private _containsErrors: boolean = false;
     private _log: string = "";
-    private _compiledSource: string = "";
-    private _urlFE = "";
     public _azStorage = new AzStorage();
     private _tsc: import("child_process").ChildProcessWithoutNullStreams | undefined;
 
 
     constructor(private _userName: string, private _gameName: string) {
-
         var cl = console.log;
         console.log = (...args) => {
             var message = ``;
@@ -29,7 +24,6 @@ export class Compiler {
             this._log += `${message}\n`;
             cl.apply(console, args);
         }
-
     }
 
     public isStarted(): boolean {
@@ -76,6 +70,7 @@ export class Compiler {
                     await this._azStorage.uploadSource(`${this._userName.toLocaleLowerCase()}-${this._gameName.toLocaleLowerCase()}`, `/active/user_${this._userName}_${this._gameName}/obj/`);
     
                 } catch (error) {
+                    this._isBuildComplete = true
                     this._containsErrors = true;
                     console.log(error);
                 }
@@ -112,14 +107,7 @@ export class Compiler {
     }
 
     private async start(force: boolean = false): Promise<void> {
-
         try {
-            if (this.isStarted() && !force) {
-                console.log(`*** /active/user_${this._userName}_${this._gameName} tsc already started, exiting`);
-                return;
-            } else {
-                console.log(`*** /active/user_${this._userName}_${this._gameName} starting tsc, force=${force}`);
-            }
 
             if (this._tsc) {
                 console.log(`tsc is already running, attempting to kill..`);
@@ -129,9 +117,15 @@ export class Compiler {
                 await new Promise(resolve => setTimeout(resolve, 5000));
             }
 
+            if (force) {
+                console.log(`*** /active/user_${this._userName}_${this._gameName} npm install`);
+                await this._npm();
+            } 
+            
+            console.log(`*** /active/user_${this._userName}_${this._gameName} starting tsc`);
+
             console.log(`### STARTING /active/user_${this._userName}_${this._gameName} tsc...`);
 
-            await this._npm();
             await this._spawntsc();
 
         } catch (error) {
@@ -152,10 +146,7 @@ export class Compiler {
             isComplete: this._isBuildComplete,
             containsErrors: this._containsErrors,
             log: this._log,
-            urlFE: this._urlFE
         };
-
-
     }
 
     public async set(sourceFiles: { [name: string]: string }) {
@@ -164,13 +155,11 @@ export class Compiler {
             this._isBuildComplete = false;
             this._containsErrors = false;
             this._log = "";
-            this._compiledSource = "";
             var restartCompilation = false;
 
             delete sourceFiles["package-lock.json"];
 
             console.log("set files:");
-
 
             for (const fileName in sourceFiles) {
 

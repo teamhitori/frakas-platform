@@ -8,12 +8,12 @@ public class GameContainer
 
     private Dictionary<string, bool> _compilerStarted = new Dictionary<string, bool>();
     private string _prevLogs;
-    private IHubContext<GameHub, IGameClient> _hubContext { get; }
+    private IHubContext<GameHub, IGameClient>? _hubContext { get; }
     //private GameService.GameServiceClient _grpcClient;
     private readonly Storage _storage;
     private readonly IStorageConfig _storageConfig;
     private readonly ILogger<GameContainer> _logger;
-    private readonly IWebSocketService _webSocketService;
+    //private readonly IWebSocketService _webSocketService;
     //private IClientStreamWriter<ConnectedPlayerDocument> _playerEventRequestStream;
     private readonly IHttpService _httpService;
 
@@ -27,7 +27,7 @@ public class GameContainer
         IHubContext<GameHub, IGameClient> hubContext,
         ILogger<GameContainer> logger,
         //GameService.GameServiceClient grpcClient,
-        IWebSocketService webSocketService,
+        //IWebSocketService webSocketService,
         IStorageConfig storageConfig,
         IHttpService httpService)
     {
@@ -36,11 +36,11 @@ public class GameContainer
         //_grpcClient = grpcClient;
         this._httpService = httpService;
         _storageConfig = storageConfig;
-        _webSocketService = webSocketService;
+        //_webSocketService = webSocketService;
         _storage = storageConfig.ToUserStorage($"TeamHitori.Mulplay.Container.Web.Components.GameContainer");
         _logger.LogInformation("Game Container Called");
 
-        StartWebsocketReceive();
+        //StartWebsocketReceive();
 
     }
 
@@ -48,9 +48,9 @@ public class GameContainer
     {
         try
         {
-            await _httpService.UrlGetType<object>($"http://game/create-game/{ gameInstanceSource.gameInstance.gamePrimaryName }/{ gameInstanceSource.beRef }", 0);
+            await _httpService.UrlGetType<object>($"http://frakas-dojo/create-game/{ gameInstanceSource.gameInstance.gamePrimaryName }/{gameInstanceSource.gameInstance.author.ToLower()}-{gameInstanceSource.gameInstance.publishedGameName.ToLower()}", 0);
 
-            var metricsConnected = await _webSocketService.SendMessage(new SocketConnectedDocument(Topic.metrics, null, gameInstanceSource.gameInstance.gamePrimaryName));
+            var metricsConnected = true; // await _webSocketService.SendMessage(new SocketConnectedDocument(Topic.metrics, null, gameInstanceSource.gameInstance.gamePrimaryName));
 
             if (metricsConnected)
             {
@@ -68,9 +68,7 @@ public class GameContainer
             throw;
         }
     }
-
-
-
+    
     public async Task DestroyGame(string gamePrimaryName)
     {
         try
@@ -79,9 +77,9 @@ public class GameContainer
 
             _gameInstances = new GameInstances(items);
 
-            await _httpService.UrlGetType<object>($"http://game/destroy-game/{ gamePrimaryName }", 0);
+            await _httpService.UrlGetType<object>($"http://frakas-dojo/destroy-game/{ gamePrimaryName }", 0);
 
-            await _webSocketService.SendMessage(new SocketConnectedDocument(Topic.destroyGame, null, gamePrimaryName));
+            //await _webSocketService.SendMessage(new SocketConnectedDocument(Topic.destroyGame, null, gamePrimaryName));
 
         }
         catch (Exception e)
@@ -91,7 +89,7 @@ public class GameContainer
         }
 
     }
-
+    
     public async Task NotifyReload(string userId, string gameName)
     {
         foreach (var user in _monitorGame)
@@ -103,11 +101,18 @@ public class GameContainer
         }
     }
 
-    public void StartCompile(string userId, string userName, string gameName, string bodyStr)
+    public bool IsCompiling(string userName, string publishedGameName)
+    {
+        var gameLocation = $"debug:{ userName }:{ publishedGameName }";
+
+        return _compilerStarted[gameLocation];
+    }
+    
+    public void StartCompile(string userId, string userName, string publishedGameName, string bodyStr)
     {
         var storage = _storageConfig.ToUserStorage(userId);
 
-        var gameLocation = $"debug:{ userName }:{ gameName }";
+        var gameLocation = $"debug:{ userName }:{ publishedGameName }";
 
         if (_compilerStarted.TryGetValue(gameLocation, out var compilerStarted))
         {
@@ -122,31 +127,29 @@ public class GameContainer
             {
                 _compilerStarted[gameLocation] = true;
 
-                await _httpService.UrlPostType<object>($"http://build/set/{ userName }/{ gameName}", bodyStr, 0);
+                await _httpService.UrlPostType<object>($"http://frakas-build/set/{ userName }/{ publishedGameName}", bodyStr, 0);
 
                 while (_compilerStarted[gameLocation])
                 {
 
-                    var status = await _httpService.UrlGetType<CompilationStatus>($"http://build/poll/{ userName }/{ gameName }", 0);
+                    var status = await _httpService.UrlGetType<CompilationStatus>($"http://frakas-build/poll/{ userName }/{ publishedGameName }", 0);
 
                     if (status == null)
                     {
-                        throw new Exception($"build appears to be down: http://build/poll/{ userName }/{ gameName }");
+                        throw new Exception($"build appears to be down: http://frakas-build/poll/{ userName }/{ publishedGameName }");
                     }
 
-                    await UpsertAndNotifyCompilation(storage, userName, gameName, status);
+                    await UpsertAndNotifyCompilation(storage, userName, publishedGameName, status);
 
 
                     if (status?.isComplete == true)
                     {
                         _compilerStarted[gameLocation] = false;
 
-                        await storage.Upsert(status.log, false, $"{gameName}-prevLogs");
+                        await storage.Upsert(status.log, false, $"{publishedGameName}-prevLogs");
+                        await storage.Upsert($"{userName.ToLower()}-{publishedGameName.ToLower()}", false, $"{publishedGameName}:compiledSourceLocation");
 
-                        await storage.Upsert(status.urlFE, false, $"{gameName}:{CodeType.FrontendLogic}");
-                        await storage.Upsert($"{userName.ToLower()}-{gameName.ToLower()}-be", false, $"{gameName}:{CodeType.BackendLogic}");
-
-                        await NotifyCompilation(userName, gameName, status);
+                        await NotifyCompilation(userName, publishedGameName, status);
                     }
                     else
                     {
@@ -161,56 +164,56 @@ public class GameContainer
         }).Start();
     }
 
-    private async Task UpsertAndNotifyCompilation(Storage storage, string userName, string gameName, CompilationStatus status)
+    private async Task UpsertAndNotifyCompilation(Storage storage, string userName, string publishedGameName, CompilationStatus status)
     {
         if (_prevLogs != status.log)
         {
 
 
-            await NotifyCompilation(userName, gameName, status);
+            await NotifyCompilation(userName, publishedGameName, status);
         }
 
 
         _prevLogs = status.log;
     }
 
-    private async Task NotifyCompilation(string userName, string gameName, CompilationStatus status)
+    private async Task NotifyCompilation(string userName, string publishedGameName, CompilationStatus status)
     {
         foreach (var user in _monitorGame)
         {
-            if (user.Key == userName && user.Value.Item1 == gameName)
+            if (user.Key == userName && user.Value.Item1 == publishedGameName)
             {
                 await _hubContext.Clients.Client(user.Value.Item2).OnNotifyCompilation(status);
             }
         }
     }
 
-    private void StartWebsocketReceive()
-    {
-        try
-        {
-            _webSocketService.OnMessage
-                .Subscribe(async message =>
-                {
-                    _logger.LogInformation($"Websocket msg: {message.topic} ");
+    //private void StartWebsocketReceive()
+    //{
+    //    try
+    //    {
+    //        _webSocketService.OnMessage
+    //            .Subscribe(async message =>
+    //            {
+    //                _logger.LogInformation($"Websocket msg: {message.topic} ");
 
-                    if (message.topic == Topic.metrics)
-                    {
-                        foreach (var user in _monitorsInstance)
-                        {
-                            if (user.Value == message.gamePrimaryName)
-                            {
-                                await _hubContext.Clients.Client(user.Key).OnMetrics(message.content);
-                            }
-                        }
-                    }
-                });
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e.Message);
-        }
-    }
+    //                if (message.topic == Topic.metrics)
+    //                {
+    //                    foreach (var user in _monitorsInstance)
+    //                    {
+    //                        if (user.Value == message.gamePrimaryName)
+    //                        {
+    //                            await _hubContext.Clients.Client(user.Key).OnMetrics(message.content);
+    //                        }
+    //                    }
+    //                }
+    //            });
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        _logger.LogError(e.Message);
+    //    }
+    //}
 
     public void MontorGame(string connectionId, string gameName, string userName)
     {
@@ -226,46 +229,4 @@ public class GameContainer
     {
         _monitorsInstance[connectionId] = gamePrimaryName;
     }
-
-
-
-    //public int GetActiveConnectionCount(string gamePrimaryName)
-    //{
-    //    return _connections.Count(pair => pair.Value == gamePrimaryName);
-    //}
-
-    //public async Task EnableDebug(string gameName, Boolean enable)
-    //{
-    //    var existingInstance = _gameInstances.items.FirstOrDefault(i => i.gameName.StartsWith(gameName));
-    //    if (existingInstance != null)
-    //    {
-    //        var items = _gameInstances.items.Upsert(existingInstance with { isDebug = enable }, i => i.gameName.StartsWith(gameName));
-
-    //        _gameInstances = new GameInstances(items);
-
-    //        await _storage.Upsert(_gameInstances, true);
-    //    }
-    //}
-
-    //private void NotifyActivePlayerCount(string gamePrimaryName)
-    //{
-    //    var game = _gameInstances.items.FirstOrDefault(i => i.gamePrimaryName == gamePrimaryName);
-
-    //    if (game != null)
-    //    {
-    //        var activeInstances = _gameInstances.items.Where(inst => inst.gameName.StartsWith(game.gameName));
-    //        var activePlayers = activeInstances.Aggregate(0, (count, inst) => GetActiveConnectionCount(inst.gamePrimaryName) + count);
-
-    //        foreach (var conn in _monitorActivePlayers)
-    //        {
-    //            if (game.gameName.StartsWith(conn.Value))
-    //            {
-    //                //_ = _hubContext.Clients.Client(conn.Key).OnActivePlayerChange(activePlayers);
-    //            }
-
-    //        }
-    //    }
-
-    //}
-
 }

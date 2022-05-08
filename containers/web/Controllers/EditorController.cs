@@ -2,7 +2,7 @@
 using TeamHitori.Mulplay.shared.storage;
 using Microsoft.AspNetCore.Authorization;
 
-[Authorize]
+[AllowAnonymous]
 public class EditorController : Controller
 {
 
@@ -26,7 +26,7 @@ public class EditorController : Controller
     [HttpGet("editor/{publishedGameName?}")]
     public async Task<IActionResult> Index(string publishedGameName)
     {
-        if (User.Identity.IsAuthenticated)
+        if (User?.Identity?.IsAuthenticated == true)
         {
             // To lower
 
@@ -41,9 +41,4 @@ public class EditorController : Controller
         }
     }
 
-    [HttpGet("editor-frame")]
-    public async Task<IActionResult> Frame()
-    {
-        return View("Frame");
-    }
 }

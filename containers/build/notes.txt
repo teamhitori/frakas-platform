@@ -4,3 +4,7 @@ Requests:
 - Start TS Watch for user context
 - Put Source Files (Compile)
 - Poll compiled code
+
+- dns utils
+apt-get update
+apt install dnsutils

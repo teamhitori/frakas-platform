@@ -3,7 +3,8 @@
 # compiled output
 build
 dist
-/dist-nohash
+dist-nohash
+dist-debug
 /tmp
 /out-tsc
 # Only exists if Bazel was run

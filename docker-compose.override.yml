@@ -1,24 +1,47 @@
 version: '3.4'
 
 services:
-  web:
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443;http://+:80
+  frakas-azsim:
+    container_name: frakas-azsim
+    build:
+      context: containers/proxy
+      dockerfile: DockerfileAzSim
     ports:
       - "8000:80"
       - "8001:443"
     volumes:
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
-      - "./editor/dist:/app/wwwroot"
+      - "./containers/proxy:/src/"
+    dns:
+      - 8.8.8.8
+      
+  frakas-proxy:
+    build:
+      context: containers/proxy
+      dockerfile: Dockerfile
+    volumes:
+      - "./containers/proxy:/src/"
     dns:
       - 8.8.8.8
 
-  build:
+  frakas-web:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - "./editor/dist-debug:/app/wwwroot"
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets
+    ports:
+      - "5000:80"
+      - "5001:443"
+    dns:
+      - 8.8.8.8
+
+  frakas-build:
     environment:
       - USER_SECRETS_ID=a0b120ef-ee80-4c73-833a-b57d0b135bb4
-    build:
-      dockerfile: Dockerfile_Debug
+    #build:
+    #  dockerfile: Dockerfile_Debug
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets/a0b120ef-ee80-4c73-833a-b57d0b135bb4:/root/.microsoft/usersecrets
       - "./containers/build:/src/"
@@ -27,12 +50,13 @@ services:
     dns:
       - 8.8.8.8
 
-  dojo:
+  frakas-dojo:
     environment: 
       - environment=local
       - USER_SECRETS_ID=a0b120ef-ee80-4c73-833a-b57d0b135bb4
-    build:
-      dockerfile: Dockerfile_Debug
+    #build:
+    #  context: containers/dojo
+    #  dockerfile: Dockerfile_Debug
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets/a0b120ef-ee80-4c73-833a-b57d0b135bb4:/root/.microsoft/usersecrets
       - "./containers/dojo:/src/"

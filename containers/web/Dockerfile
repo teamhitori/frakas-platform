@@ -7,10 +7,10 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["containers/web/web.csproj", "containers/web/"]
-RUN dotnet restore "containers/web/web.csproj"
+COPY ["web.csproj", "."]
+RUN dotnet restore "web.csproj"
 COPY . .
-WORKDIR "/src/containers/web"
+WORKDIR "/src"
 RUN dotnet build "web.csproj" -c Release -o /app/build
 
 FROM build AS publish

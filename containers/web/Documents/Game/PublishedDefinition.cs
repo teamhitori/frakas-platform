@@ -18,7 +18,7 @@ public static class PublishedDefinitionExtensions
             inst.gameInstance.author == userName);
         return new PublishedDefinition(
             gameDefinition.isPublished,
-            $"/{userName}/{gameDefinition.gameName}",
+            $"/{userName}/{gameDefinition.publishedGameName}",
             activeInstances.Any(),
             0, //activeInstances.Aggregate(0, (count, inst) => gameContainer.GetActiveConnectionCount(inst.gamePrimaryName) + count),
             gameDefinition.version

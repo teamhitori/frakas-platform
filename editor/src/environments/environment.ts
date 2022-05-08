@@ -7,7 +7,7 @@ export const environment = {
   apiBase: "https://localhost:8001",
   grpcBase: "http://localhost:8000",
   socketBase: "wss://localhost:8001/ws",
-  storageBase: "https://hitorimulplaydev.blob.core.windows.net"
+  storageBase: "https://hitorifrakasprod.blob.core.windows.net"
 };
 
 /*

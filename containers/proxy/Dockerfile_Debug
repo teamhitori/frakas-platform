@@ -1,0 +1,12 @@
+FROM envoyproxy/envoy-dev
+
+COPY . /app
+WORKDIR /app
+EXPOSE 80
+
+RUN ["chmod", "+x", "/app/start-proxy.sh"]
+
+WORKDIR /src
+
+ENTRYPOINT ["tail"]
+CMD ["-f","/dev/null"]

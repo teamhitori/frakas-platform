@@ -1,39 +1,40 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+		<UserSecretsId>a0b120ef-ee80-4c73-833a-b57d0b135bb4</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerfileContext>..\..</DockerfileContext>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
-    <UserSecretsId>a0b120ef-ee80-4c73-833a-b57d0b135bb4</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>..\..</DockerfileContext>
-  </PropertyGroup>
+	<ItemGroup>
+		<Compile Remove="ngApp\**" />
+		<Content Remove="ngApp\**" />
+		<EmbeddedResource Remove="ngApp\**" />
+		<None Remove="ngApp\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="ngApp\**" />
-    <Content Remove="ngApp\**" />
-    <EmbeddedResource Remove="ngApp\**" />
-    <None Remove="ngApp\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.20.0" />
+		<PackageReference Include="Microsoft.Azure.SignalR" Version="1.16.0" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="1.23.1" />
+		<PackageReference Include="Microsoft.Identity.Web.UI" Version="1.23.1" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+		<PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />
+		<PackageReference Include="System.Reactive" Version="5.0.0" />
+		<PackageReference Include="TeamHitori.Mulplay.Shared.Storage" Version="1.0.2" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.20.0" />
-    <PackageReference Include="Microsoft.Azure.SignalR" Version="1.16.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="1.23.1" />
-    <PackageReference Include="Microsoft.Identity.Web.UI" Version="1.23.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />
-    <PackageReference Include="System.Reactive" Version="5.0.0" />
-    <!--<PackageReference Include="TeamHitori.Mulplay.Shared.Storage" Version="1.0.1" />-->
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="wwwroot\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\mulplay\mulplay-shared-storage\dotnet\mulplay-shared-storage.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+	  <Reference Include="shared">
+	    <HintPath>lib\shared.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 
 </Project>
